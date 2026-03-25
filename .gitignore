@@ -1,0 +1,11 @@
+/libs/
+/Core/bin
+/Core/debug
+.vs/
+*.exe
+*.log
+*.tlog
+*.obj
+*.VC.db
+*.VC.opendb
+*.user
