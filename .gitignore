@@ -1,7 +1,9 @@
 /libs/
-/Core/bin
-/Core/debug
+/core/bin
+/core/debug
+/core/build
 .vs/
+*.filters
 *.exe
 *.log
 *.tlog
