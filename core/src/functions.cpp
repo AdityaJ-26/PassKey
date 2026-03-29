@@ -3,13 +3,13 @@
 
 #include "sodium.h"
 
-#include "../include/functions.h"
+#include "functions.h"
 
-void input(CharBuffer* user) {
-	std::string input;
+void input(SecureCharBuffer* user) {
+	SecureString input;
 
 	std::cout << "Enter : ";
 	std::cin >> input;
 
-	*user = CharBuffer(input.begin(), input.end());
+	*user = SecureCharBuffer(input.begin(), input.end());
 }

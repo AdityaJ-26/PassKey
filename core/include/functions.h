@@ -3,6 +3,6 @@
 
 #include "constants.h"
 
-void input(CharBuffer*);
+void input(SecureCharBuffer*);
 
 #endif // UTILS_H

@@ -2,6 +2,7 @@
 /core/bin
 /core/debug
 /core/build
+/bin/
 .vs/
 *.filters
 *.exe

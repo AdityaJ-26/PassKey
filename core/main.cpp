@@ -3,9 +3,9 @@
 
 #include "sodium.h"
 
-#include "include/data.h"
-#include "include/constants.h"
-#include "include/functions.h"
+#include "data.h"
+#include "constants.h"
+#include "functions.h"
 
 
 
@@ -14,8 +14,12 @@ int main(void) {
 		exit(-1);
 	}
 
-	CharBuffer* pass = new CharBuffer();
-	CharBuffer* user = new CharBuffer();
+	try {
+		SecureCharBuffer* user;
+		SecureCharBuffer* pass;
+
+		user = new SecureCharBuffer();
+		pass = new SecureCharBuffer();
 
 	input(user);
 	input(pass);
@@ -37,12 +41,20 @@ int main(void) {
 	if (crypto_secretbox_easy(encrypted_pass.data(), pass->data(), pass->size(), nonce_pass.data(), key.data()) < 0) {
 		std::cout << "error encrypting password";
 	}
+	for (const auto& c : encrypted_user) std::cout << c;
+	std::cout << std::endl;
+	for (const auto& c : encrypted_pass) std::cout << c;
+	std::cout << std::endl;
 
 	CharBuffer decrypted(user->size());
 	if (crypto_secretbox_open_easy(decrypted.data(), encrypted_user.data(), encrypted_user.size(), nonce_user.data(), key.data()) < 0) {
 		std::cout << "error decrypting";
 	}
 	for (const auto& c : decrypted) std::cout << c;
+	}
+	catch (std::bad_alloc& e) {
+		std::cout << e.what();
+	}
 
 
 	return 0;
