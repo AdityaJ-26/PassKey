@@ -1,3 +1,7 @@
+/*
+This is the minimal implementation of a custom allocator, all the things implemented are important for the working of allocator
+*/
+
 #ifndef ALLOC_H
 #define ALLOC_H
 
@@ -6,7 +10,6 @@
 #include <iostream>
 
 #include "sodium.h"
-
 
 //custom allocator class for secure memory allocation of decrypted credentials
 template <typename T>

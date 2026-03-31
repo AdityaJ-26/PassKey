@@ -79,8 +79,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)build\debug\</OutDir>
     <IntDir>$(ProjectDir)build\intermediates\debug\</IntDir>
-    <IncludePath>$(ProjectDir)include;$(SolutionDir)libs\libsodium\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)libs\libsodium\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)build\release</OutDir>
@@ -91,8 +91,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)build\intermediates\release\</IntDir>
-    <IncludePath>$(ProjectDir)include;$(SolutionDir)libs\libsodium\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)libs\libsodium\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,14 +129,16 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)extern\libsodium\include;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\libsodium\lib;$(LibraryPath)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)libs\libsodium\lib\libsodium.dll" "$(OutDir)"</Command>
+      <Command>copy /Y "$(SolutionDir)extern\libsodium\lib\libsodium.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -148,26 +150,30 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)extern\libsodium\include;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\libsodium\lib;$(LibraryPath)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)libs\libsodium\lib\libsodium.dll" "$(OutDir)"</Command>
+      <Command>copy /Y "$(SolutionDir)extern\libsodium\lib\libsodium.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\data.cpp" />
-    <ClCompile Include="src\functions.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\alloc.h" />
     <ClInclude Include="include\constants.h" />
+    <ClInclude Include="core.h" />
     <ClInclude Include="include\data.h" />
-    <ClInclude Include="include\functions.h" />
+    <ClInclude Include="include\error.h" />
+    <ClInclude Include="include\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

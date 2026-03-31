@@ -2,60 +2,72 @@
 #include <string>
 
 #include "sodium.h"
+#include "core.h"
 
-#include "data.h"
-#include "constants.h"
-#include "functions.h"
+int main(void) 
+{
+	init();
 
-
-
-int main(void) {
-	if (sodium_init() < 0) {
-		exit(-1);
-	}
-
-	try {
-		SecureCharBuffer* user;
-		SecureCharBuffer* pass;
-
-		user = new SecureCharBuffer();
-		pass = new SecureCharBuffer();
-
-	input(user);
-	input(pass);
-
+	int choice{ 0 };
+	
+	SecureCharBuffer pass;
+	SecureCharBuffer user;
+	CharBuffer metadata;
+	
 	CharBuffer key(crypto_secretbox_KEYBYTES);
-	CharBuffer nonce_user(crypto_secretbox_NONCEBYTES);
-	CharBuffer nonce_pass(crypto_secretbox_NONCEBYTES);
-
-	CharBuffer encrypted_user(user->size() + crypto_secretbox_MACBYTES);
-	CharBuffer encrypted_pass(pass->size() + crypto_secretbox_MACBYTES);
-
 	crypto_secretbox_keygen(key.data());
-	randombytes_buf(nonce_user.data(), nonce_user.size());
-	randombytes_buf(nonce_pass.data(), nonce_pass.size());
 
-	if (crypto_secretbox_easy(encrypted_user.data(), user->data(), user->size(), nonce_user.data(), key.data()) < 0) {
-		std::cout << "error encrypting username";
-	}
-	if (crypto_secretbox_easy(encrypted_pass.data(), pass->data(), pass->size(), nonce_pass.data(), key.data()) < 0) {
-		std::cout << "error encrypting password";
-	}
-	for (const auto& c : encrypted_user) std::cout << c;
-	std::cout << std::endl;
-	for (const auto& c : encrypted_pass) std::cout << c;
-	std::cout << std::endl;
+	std::vector<Data> passwords;
 
-	CharBuffer decrypted(user->size());
-	if (crypto_secretbox_open_easy(decrypted.data(), encrypted_user.data(), encrypted_user.size(), nonce_user.data(), key.data()) < 0) {
-		std::cout << "error decrypting";
-	}
-	for (const auto& c : decrypted) std::cout << c;
-	}
-	catch (std::bad_alloc& e) {
-		std::cout << e.what();
-	}
+	while (true) 
+	{
 
+		std::cout << "======= MENU =======" << std::endl;
+		std::cout << "1. Enter Credentials" << std::endl;
+		std::cout << "2. Display" << std::endl;
+		std::cout << "3. Decrypt" << std::endl;
+		std::cin >> choice;
+
+		switch (choice)
+		{
+			case 1:
+				std::cout << "Enter MetaData : ";
+				input( &metadata );
+				std::cout << "Enter Username : ";
+				input( &user );
+				std::cout << "Enter Password : ";
+				input( &pass );
+				
+				encrypt( user, pass, passwords, key, metadata );
+				user.clear();
+				pass.clear();
+				break;
+
+			case 2:
+				for (const auto& x : passwords) {
+					std::cout << x.getMetaData() << std::endl;
+				}
+				std::cout << "-----------------" << std::endl;
+				break;
+
+			case 3:
+				CharBuffer metadata;
+				std::cout << "Enter username of password to show details : ";
+				input( &metadata );
+				for (const auto& x : passwords) 
+				{
+					if (x.getMetaData() == metadata) {
+						decrypt(x, pass, user, key);
+					}
+					//std::cout << "UserName : " << user << std::endl;
+					//std::cout << "Password : " << pass << std::endl;
+				}
+				user.clear();
+				pass.clear();
+				break;
+		}
+		if (choice == 0) break;
+	}
 
 	return 0;
 }
