@@ -4,6 +4,8 @@
 /core/build
 /bin/
 .vs/
+/data/*
+
 *.filters
 *.exe
 *.log
