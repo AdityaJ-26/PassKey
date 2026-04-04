@@ -1,6 +1,8 @@
 #ifndef DATA_H
 #define DATA_H
 
+#include <fstream>
+
 #include "constants.h"
 
 class Data {
@@ -12,9 +14,13 @@ class Data {
 		CharBuffer metadata;
 
 	public:
+		Data();
 		Data( const CharBuffer&, const CharBuffer&, const CharBuffer&, const CharBuffer&, const CharBuffer&);
-		void getData(std::vector<CharBuffer>&) const;
 		const CharBuffer& getMetaData() const;
+		void store() const;
+		void decrypt( SecureCharBuffer&, SecureCharBuffer&, CharBuffer& ) const;
+		bool read(std::fstream&);
+		void clear();
 };
 
 #endif // DATA_H

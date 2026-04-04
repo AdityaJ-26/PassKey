@@ -17,8 +17,6 @@ int main(void)
 	CharBuffer key(crypto_secretbox_KEYBYTES);
 	crypto_secretbox_keygen(key.data());
 
-	std::vector<Data> passwords;
-
 	while (true) 
 	{
 
@@ -38,33 +36,73 @@ int main(void)
 				std::cout << "Enter Password : ";
 				input( &pass );
 				
-				encrypt( user, pass, passwords, key, metadata );
+				encrypt( user, pass, key, metadata );
 				user.clear();
 				pass.clear();
+				metadata.clear();
 				break;
 
 			case 2:
-				for (const auto& x : passwords) {
-					std::cout << x.getMetaData() << std::endl;
+			{
+				std::fstream file;
+				file.open(FILE_PATH, std::ios::binary | std::ios::in);
+
+				Data temp;
+				while (temp.read(file)) 
+				{
+					std::cout << "--------------------\n";
+					std::cout << temp.getMetaData();
 				}
-				std::cout << "-----------------" << std::endl;
+				std::cout << "--------------------\n";
+				file.close();
+			}
 				break;
 
 			case 3:
-				CharBuffer metadata;
-				std::cout << "Enter username of password to show details : ";
-				input( &metadata );
-				for (const auto& x : passwords) 
+			try 
+			{
+				std::cout << "Enter Metadata of Password to show details : ";
+				input(&metadata);
+				bool found = false;
+
 				{
-					if (x.getMetaData() == metadata) {
-						decrypt(x, pass, user, key);
+					std::fstream file;
+					file.open(FILE_PATH, std::ios::binary | std::ios::in);
+
+					Data temp;
+					while (temp.read(file)) 
+					{
+						if (temp.getMetaData() == metadata) 
+						{
+							found = true;
+							temp.decrypt(pass, user, key);
+							break;
+						}
 					}
-					//std::cout << "UserName : " << user << std::endl;
-					//std::cout << "Password : " << pass << std::endl;
+					file.close();
 				}
-				user.clear();
-				pass.clear();
+
+				if (found) 
+				{
+					std::cout << "Password : " << pass;
+					std::cout << "UserName : " << user;
+					pass.clear();
+					user.clear();
+				}
 				break;
+			}
+			catch (Error& e) 
+			{
+				std::cout << e.what();
+				char c = getchar();
+				exit(-1);
+			}
+			catch (std::bad_alloc& e) 
+			{
+				std::cout << e.what();
+				char c = getchar();
+				exit(-1);
+			}
 		}
 		if (choice == 0) break;
 	}

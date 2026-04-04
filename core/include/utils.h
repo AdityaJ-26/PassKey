@@ -9,8 +9,7 @@
 void init();
 void input( CharBuffer* );
 void input( SecureCharBuffer* );
-void encrypt( const SecureCharBuffer&, const SecureCharBuffer&, std::vector<Data>&, const CharBuffer&, const CharBuffer& );
-void decrypt( const Data&, SecureCharBuffer&, SecureCharBuffer&, CharBuffer&);
+void encrypt( const SecureCharBuffer&, const SecureCharBuffer&, const CharBuffer&, const CharBuffer& );
 
 std::ostream& operator <<( std::ostream&, const SecureCharBuffer& );
 std::ostream& operator <<( std::ostream&, const CharBuffer& );
