@@ -3,6 +3,10 @@
 
 #include <string>
 
+
+/* -------------------------------------------------- */
+// exception error class
+/* -------------------------------------------------- */
 class Error {
 	private:
 		std::string _error;

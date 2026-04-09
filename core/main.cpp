@@ -3,20 +3,46 @@
 
 #include "sodium.h"
 #include "core.h"
+#include "user.h"
+#include "encrypt.h"
 
 int main(void) 
 {
 	init();
 
 	int choice{ 0 };
-	
-	SecureCharBuffer pass;
-	SecureCharBuffer user;
-	CharBuffer metadata;
-	
-	CharBuffer key(crypto_secretbox_KEYBYTES);
-	crypto_secretbox_keygen(key.data());
 
+	buffer::SecureCharBuffer key(crypto_secretbox_KEYBYTES);
+
+	std::cout << "new user(y/n) : ";
+	try 
+	{
+		switch (getchar()) 
+		{
+			case 'y':
+				initUser();
+			case 'n':
+				key = loadUser();
+				break;
+			default:
+				std::cout << "Invalid Choice..";
+				std::cout << "Press Enter to Continue";
+				getchar();
+				exit(0);
+		}
+	}
+	catch (Error& e)
+	{
+		std::cout << e.what() << std::endl;
+		exit(-1);
+	}
+	catch (...) 
+	{
+		std::cout << "_unexpected_error " << std::endl;
+	}
+
+
+	// menu
 	while (true) 
 	{
 
@@ -29,49 +55,67 @@ int main(void)
 		switch (choice)
 		{
 			case 1:
+			try {
+				buffer::SecureCharBuffer pass;
+				buffer::SecureCharBuffer user;
+				buffer::CharBuffer metadata;
 				std::cout << "Enter MetaData : ";
-				input( &metadata );
+				input(&metadata);
 				std::cout << "Enter Username : ";
-				input( &user );
+				input(&user);
 				std::cout << "Enter Password : ";
-				input( &pass );
-				
-				encrypt( user, pass, key, metadata );
-				user.clear();
-				pass.clear();
-				metadata.clear();
-				break;
+				input(&pass);
 
+				encrypt(user, pass, key, metadata);
+				sodium_memzero(metadata.data(), metadata.size());
+				break;
+			}
+			catch (Error& e) {
+				std::cerr << "error(data input) : " << e.what() << std::endl;
+				exit(-1);
+			}
 			case 2:
-			{
+			try {
 				std::fstream file;
-				file.open(FILE_PATH, std::ios::binary | std::ios::in);
+				file.open(filepath::DATA, std::ios::binary | std::ios::in);
+				if (!file.is_open()) 
+				{
+					throw Error{ "_file_error : failed to load data file" };
+				}
 
 				Data temp;
-				while (temp.read(file)) 
+				while (true)
 				{
+					if (!temp.read(file)) break;
 					std::cout << "--------------------\n";
 					std::cout << temp.getMetaData();
 				}
 				std::cout << "--------------------\n";
 				file.close();
 			}
-				break;
-
+			catch (Error& e) {
+				std::cerr << "error(metadata display) : " << e.what() << std::endl;
+				exit(-1);
+			}
+			break;
 			case 3:
 			try 
 			{
+				buffer::SecureCharBuffer user;
+				buffer::SecureCharBuffer pass;
+				buffer::CharBuffer metadata;
 				std::cout << "Enter Metadata of Password to show details : ";
 				input(&metadata);
 				bool found = false;
 
 				{
 					std::fstream file;
-					file.open(FILE_PATH, std::ios::binary | std::ios::in);
+					file.open(filepath::DATA, std::ios::binary | std::ios::in);
 
 					Data temp;
-					while (temp.read(file)) 
+					while (true) 
 					{
+						if (!temp.read(file)) break;
 						if (temp.getMetaData() == metadata) 
 						{
 							found = true;
@@ -81,6 +125,7 @@ int main(void)
 					}
 					file.close();
 				}
+				sodium_memzero(metadata.data(), metadata.size());
 
 				if (found) 
 				{
@@ -93,7 +138,7 @@ int main(void)
 			}
 			catch (Error& e) 
 			{
-				std::cout << e.what();
+				std::cerr << "error(decrypting data) : " << e.what() << std::endl;
 				char c = getchar();
 				exit(-1);
 			}

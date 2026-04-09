@@ -4,44 +4,62 @@
 #include "error.h"
 #include "utils.h"
 
+
+/* -------------------------------------------------- */
+// Constructor | Destructor
+/* -------------------------------------------------- */
 Data::Data() :
 	encrypt_password(),
 	encrypt_username(),
-	nonce_password(),
-	nonce_username()
+	password_nonce(),
+	username_nonce()
 { }
 
-
-Data::Data( const CharBuffer& pass, 
-	const CharBuffer& nonce1,
-	const CharBuffer& user,
-	const CharBuffer& nonce2,
-	const CharBuffer& meta ) : 
+Data::Data( const buffer::CharBuffer& pass, 
+	const buffer::CharBuffer& nonce1,
+	const buffer::CharBuffer& user,
+	const buffer::CharBuffer& nonce2,
+	const buffer::CharBuffer& meta ) : 
 
 	encrypt_password(pass), 
-	nonce_password(nonce1),
+	password_nonce(nonce1),
 	encrypt_username(user),
-	nonce_username(nonce2),
+	username_nonce(nonce2),
 	metadata(meta)
 { }
 
-
-const CharBuffer& Data::getMetaData() const 
+Data::~Data() 
 {
-	return this->metadata;
+	clear();
 }
 
 
-void Data::decrypt( SecureCharBuffer& pass, SecureCharBuffer& user, CharBuffer& key ) const 
+/*
+zeroes the memory of data members
+*/
+void Data::clear()
 {
-	pass.resize(encrypt_password.size());
-	user.resize(encrypt_username.size());
+	sodium_memzero(reinterpret_cast<void*>(encrypt_password.data()), encrypt_password.size());
+	sodium_memzero(reinterpret_cast<void*>(encrypt_username.data()), encrypt_username.size());
+	sodium_memzero(reinterpret_cast<void*>(password_nonce.data()), password_nonce.size());
+	sodium_memzero(reinterpret_cast<void*>(username_nonce.data()), username_nonce.size());
+}
+
+
+
+/* -------------------------------------------------- */
+// decrypt data method
+/* -------------------------------------------------- */
+void Data::decrypt( buffer::SecureCharBuffer& pass, buffer::SecureCharBuffer& user, const buffer::SecureCharBuffer& key ) const 
+{
+	pass.resize(encrypt_password.size() - crypto_secretbox_MACBYTES);
+	user.resize(encrypt_username.size() - crypto_secretbox_MACBYTES);
 
 	if (crypto_secretbox_open_easy(
 		pass.data(),
 		encrypt_password.data(),
 		encrypt_password.size(),
-		nonce_password.data(),
+		password_nonce.data(),
 		key.data()) < 0)
 	{
 		throw Error{ "_decrypting_error : error decrypting user " };
@@ -51,7 +69,7 @@ void Data::decrypt( SecureCharBuffer& pass, SecureCharBuffer& user, CharBuffer& 
 		user.data(),
 		encrypt_username.data(),
 		encrypt_username.size(),
-		nonce_username.data(),
+		username_nonce.data(),
 		key.data()) < 0)
 	{
 		throw Error{ "_decryption_error : error decrypting pass " };
@@ -59,10 +77,22 @@ void Data::decrypt( SecureCharBuffer& pass, SecureCharBuffer& user, CharBuffer& 
 }
 
 
+
+/* -------------------------------------------------- */
+// store data(creds) in creds.bin
+/* -------------------------------------------------- */
+
+/*
+store data in order 
+	len(pass) -> pass ->
+	len(pass_nonce) -> pass_nonce ->
+	len(user) -> user ->
+	len(user_nonce) -> user_nonce
+*/
 void Data::store() const 
 {
 	std::fstream fout;
-	fout.open(FILE_PATH, std::ios::binary | std::ios::app | std::ios::out);
+	fout.open(filepath::DATA, std::ios::binary | std::ios::app | std::ios::out);
 
 	if (!fout.is_open()) 
 	{
@@ -79,22 +109,25 @@ void Data::store() const
 	fout.write(reinterpret_cast<const char*>(&len), sizeof(len));
 	fout.write(reinterpret_cast<const char*>(encrypt_password.data()), len);
 
-	len = nonce_password.size();
+	len = password_nonce.size();
 	fout.write(reinterpret_cast<const char*>(&len), sizeof(len));
-	fout.write(reinterpret_cast<const char*>(nonce_password.data()), len);
+	fout.write(reinterpret_cast<const char*>(password_nonce.data()), len);
 
 	len = encrypt_username.size();
 	fout.write(reinterpret_cast<const char*>(&len), sizeof(len));
 	fout.write(reinterpret_cast<const char*>(encrypt_username.data()), len);
 
-	len = nonce_username.size();
+	len = username_nonce.size();
 	fout.write(reinterpret_cast<const char*>(&len), sizeof(len));
-	fout.write(reinterpret_cast<const char*>(nonce_username.data()), len);
+	fout.write(reinterpret_cast<const char*>(username_nonce.data()), len);
 
 	fout.close();
 }
 
 
+/* -------------------------------------------------- */
+// read data(creds)
+/* -------------------------------------------------- */
 bool Data::read(std::fstream& fin) 
 {
 	size_t len{ 0 };
@@ -108,40 +141,41 @@ bool Data::read(std::fstream& fin)
 
 	if (!fin.read(reinterpret_cast<char*>(&len), sizeof(len))) 
 	{
-		return false;
+		throw Error{ "_file_error : file have incomplete data" };
 	}
 	encrypt_password.resize(len);
 	fin.read(reinterpret_cast<char*>(encrypt_password.data()), len);
 
 	if (!fin.read(reinterpret_cast<char*>(&len), sizeof(len))) 
 	{
-		return false;
+		throw Error { "_file_error : file have incomplete data" };
 	}
-	nonce_password.resize(len);
-	fin.read(reinterpret_cast<char*>(nonce_password.data()), len);
+	password_nonce.resize(len);
+	fin.read(reinterpret_cast<char*>(password_nonce.data()), len);
 
 	if (!fin.read(reinterpret_cast<char*>(&len), sizeof(len)))
 	{
-		return false;
+		throw Error { "_file_error : file have incomplete data" };
 	}
 	encrypt_username.resize(len);
 	fin.read(reinterpret_cast<char*>(encrypt_username.data()), len);
 
 	if (!fin.read(reinterpret_cast<char*>(&len), sizeof(len)))
 	{
-		return false;
+		throw Error { "_file_error : file have incomplete data" };
 	}
-	nonce_username.resize(len);
-	fin.read(reinterpret_cast<char*>(nonce_username.data()), len);
+	username_nonce.resize(len);
+	fin.read(reinterpret_cast<char*>(username_nonce.data()), len);
 
+	fin.close();
 	return true;
 }
 
 
-void Data::clear()
+/* -------------------------------------------------- */
+// public functions
+/* -------------------------------------------------- */
+const buffer::CharBuffer& Data::getMetaData() const
 {
-	encrypt_password.clear();
-	nonce_password.clear();
-	encrypt_username.clear();
-	nonce_username.clear();
+	return this->metadata;
 }

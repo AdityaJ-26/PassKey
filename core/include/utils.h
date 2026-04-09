@@ -7,11 +7,10 @@
 #include "data.h"
 
 void init();
-void input( CharBuffer* );
-void input( SecureCharBuffer* );
-void encrypt( const SecureCharBuffer&, const SecureCharBuffer&, const CharBuffer&, const CharBuffer& );
+void input( buffer::CharBuffer* );
+void input( buffer::SecureCharBuffer* );
 
-std::ostream& operator <<( std::ostream&, const SecureCharBuffer& );
-std::ostream& operator <<( std::ostream&, const CharBuffer& );
+std::ostream& operator <<( std::ostream&, const buffer::SecureCharBuffer& );
+std::ostream& operator <<( std::ostream&, const buffer::CharBuffer& );
 
 #endif // UTILS_H

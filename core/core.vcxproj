@@ -129,7 +129,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)extern\libsodium\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\crypto;$(ProjectDir)include;$(SolutionDir)extern\libsodium\include;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -150,7 +150,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(SolutionDir)extern\libsodium\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\crypto;$(ProjectDir)include;$(SolutionDir)extern\libsodium\include;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,14 +165,21 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\data.cpp" />
+    <ClCompile Include="src\encrypt.cpp" />
+    <ClCompile Include="src\functions.cpp" />
+    <ClCompile Include="src\user.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\crypto.h" />
     <ClInclude Include="include\alloc.h" />
     <ClInclude Include="include\constants.h" />
     <ClInclude Include="core.h" />
-    <ClInclude Include="include\data.h" />
+    <ClInclude Include="include\crypto\data.h" />
+    <ClInclude Include="include\crypto\encrypt.h" />
+    <ClInclude Include="include\crypto\functions.h" />
     <ClInclude Include="include\error.h" />
+    <ClInclude Include="include\crypto\user.h" />
     <ClInclude Include="include\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

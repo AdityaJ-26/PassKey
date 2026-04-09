@@ -19,7 +19,7 @@ class SecureAllocator {
 		SecureAllocator() = default;								// mandatory
 		~SecureAllocator() = default;
 
-		// optional aliases
+		// optional Bufferes
 		// provides standardised name for different values
 		using value_type = T;										// mandatory
 		using pointer = T*;
@@ -54,8 +54,12 @@ class SecureAllocator {
 		}
 
 		// deallocation function
+		// zeroes data pointed
 		// releases allocated memory using sodium_free()
 		void deallocate(pointer ptr, size_type numObjects) {		// mandatory
+			if (ptr) {
+				sodium_memzero(reinterpret_cast<void*>(ptr), numObjects);
+			}
 			sodium_free(ptr);
 		}
 
