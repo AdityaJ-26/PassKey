@@ -6,23 +6,27 @@
 #include "alloc.h"
 
 
-/* -------------------------------------------------- */
-// file paths
-/* -------------------------------------------------- */
-namespace filepath {
-	constexpr const char* DATA = "../data/creds.bin";
-	constexpr const char* KEY = "../data/key.bin";
-	constexpr const char* PHRASE = "../data/phrase.bin";
-}
+enum FileTypes {
+	vault = 0,
+	userSettings = 1,
+	key = 2,
+	pass = 3
+};
 
 
 /* -------------------------------------------------- */
 // name aliases
 /* -------------------------------------------------- */
-namespace buffer {
-	using SecureCharBuffer = std::vector<unsigned char, SecureAllocator<unsigned char>>;
-	using SecureString = std::basic_string<char, std::char_traits<char>, SecureAllocator<char>>;
-	using CharBuffer = std::vector<unsigned char>;
-}
+using SecureCharBuffer = std::vector<unsigned char, SecureAllocator<unsigned char>>;
+using SecureString = std::basic_string<char, std::char_traits<char>, SecureAllocator<char>>;
+using CharBuffer = std::vector<unsigned char>;
 
-#endif 
+
+/* -------------------------------------------------- */
+// numeric constants
+/* -------------------------------------------------- */
+
+// 8 * 4 - uint64_t length variable | 24 * 2 - nonce size | 30 - username | 20 - password | 1 - passProtected
+constexpr uint64_t PADDING_SIZE = 161;
+
+#endif  // ! CONTANTS_H 

@@ -1,5 +1,5 @@
 /*
-This is the minimal implementation of a custom allocator, all the things implemented are important for the working of allocator
+* minimal implementation of a custom allocator
 */
 
 #ifndef ALLOC_H
@@ -11,7 +11,7 @@ This is the minimal implementation of a custom allocator, all the things impleme
 
 #include "sodium.h"
 
-//custom allocator class for secure memory allocation of decrypted credentials
+//custom allocator class for secure memory allocation of decrypted / sensitive credentials
 template <typename T>
 class SecureAllocator {
 	public:
@@ -19,7 +19,7 @@ class SecureAllocator {
 		SecureAllocator() = default;								// mandatory
 		~SecureAllocator() = default;
 
-		// optional Bufferes
+		// optional aliases
 		// provides standardised name for different values
 		using value_type = T;										// mandatory
 		using pointer = T*;
@@ -37,7 +37,7 @@ class SecureAllocator {
 		SecureAllocator(const SecureAllocator<U>&) noexcept {}
 
 		// allocation function
-		// returns static_cast pointer of allocated memory, using sodium_malloc() to get secure memory
+		// returns secure allocated memory block
 		// debugging not allowed with secured memory, instruction defined internally to stop execution
 		pointer allocate(size_type numObjects) {					// mandatory
 			pointer ptr = static_cast<pointer>(sodium_malloc(numObjects * sizeof(T)));
@@ -54,8 +54,7 @@ class SecureAllocator {
 		}
 
 		// deallocation function
-		// zeroes data pointed
-		// releases allocated memory using sodium_free()
+		// zeroes data pointed 
 		void deallocate(pointer ptr, size_type numObjects) {		// mandatory
 			if (ptr) {
 				sodium_memzero(reinterpret_cast<void*>(ptr), numObjects);

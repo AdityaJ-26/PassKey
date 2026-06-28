@@ -7,10 +7,15 @@
 #include "data.h"
 
 void init();
-void input( buffer::CharBuffer* );
-void input( buffer::SecureCharBuffer* );
+void input( CharBuffer* );
+void input( SecureCharBuffer* );
 
-std::ostream& operator <<( std::ostream&, const buffer::SecureCharBuffer& );
-std::ostream& operator <<( std::ostream&, const buffer::CharBuffer& );
+std::ostream& operator <<( std::ostream&, const SecureCharBuffer& );
+std::ostream& operator <<( std::ostream&, const CharBuffer& );
 
-#endif // UTILS_H
+template <typename T>
+void zero(T& data) {
+	sodium_memzero(data.data(), data.size());
+}
+
+#endif // ! UTILS_H

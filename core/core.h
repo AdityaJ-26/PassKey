@@ -6,5 +6,7 @@
 #include "error.h"
 #include "data.h"
 #include "utils.h"
+#include "user.h"
+#include "files.h"
 
 #endif // ! CORE_H
