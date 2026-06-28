@@ -6,7 +6,7 @@
 #include "utils.h"
 
 /* -------------------------------------------------- */
-// sodium init
+// sodium init functions wrapper
 /* -------------------------------------------------- */
 void init()
 {
@@ -18,23 +18,23 @@ void init()
 
 
 /* -------------------------------------------------- */
-// buffer::CharBuffer / buffer::SecureCharBuffer input methods
+// CharBuffer / SecureCharBuffer input methods
 /* -------------------------------------------------- */
-void input( SecureCharBuffer* user )
+void input( SecureCharBuffer& user )
 {
 	SecureString input;
 	std::getline(std::cin, input, '\n');
 
-	*user = SecureCharBuffer(input.begin(), input.end());
+	user = SecureCharBuffer(input.begin(), input.end());
 }
 
-void input( CharBuffer* data ) 
+void input( CharBuffer& data ) 
 {
 	std::string input;
 	std::cin.ignore();
 	std::getline(std::cin, input, '\n');
 	
-	*data = CharBuffer(input.begin(), input.end());
+	data = CharBuffer(input.begin(), input.end());
 }
 
 

@@ -1,11 +1,4 @@
-#include <fstream>
-
-#include "sodium.h"
-
 #include "user.h"
-#include "constants.h"
-#include "error.h"
-#include "utils.h"
 
 
 /* -------------------------------------------------- */
@@ -66,24 +59,3 @@ std::string& User::nameRef() {
 //	files->createUserFile();
 //	files->storeUserData(hardwarePath, name);
 //}
-
-
-
-/* -------------------------------------------------- */
-// reads Key, salt, nonce
-/* -------------------------------------------------- */
-
-
-
-/* -------------------------------------------------- */
-// Encryption key access
-/* -------------------------------------------------- */
-
-/*
-* decrypts encryption_key using password
-*/
-SecureCharBuffer User::loadUser()
-{
-	SecureCharBuffer encrption_key;
-
-}

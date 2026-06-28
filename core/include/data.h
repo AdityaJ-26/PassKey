@@ -12,19 +12,20 @@ class Data {
 		CharBuffer password_nonce;
 		CharBuffer username_nonce;
 		CharBuffer metadata;
-		char passProtected;
+		//char passProtected;
 
+	private:
 		void encrypt(const SecureCharBuffer&, const SecureCharBuffer&, const SecureCharBuffer&);
+		void decrypt( SecureCharBuffer&, SecureCharBuffer&, const SecureCharBuffer& ) const;
 
 	public:
 		Data();
-		Data( const SecureCharBuffer&, const SecureCharBuffer&, const CharBuffer&, const SecureCharBuffer&, char );
+		Data( const SecureCharBuffer&, const SecureCharBuffer&, const CharBuffer&, const SecureCharBuffer&);
 		~Data();
 
-		void store(std::fstream&) const;
-		bool retrieve(std::fstream&, const int&);
-		void decrypt( SecureCharBuffer&, SecureCharBuffer&, const SecureCharBuffer& ) const;
 		const CharBuffer& getMetaData() const;
+		void getEncryptedData(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, CharBuffer&) const;
+		void getData(SecureCharBuffer&, SecureCharBuffer&, const SecureCharBuffer&) const;
 };
 
 #endif // DATA_H	

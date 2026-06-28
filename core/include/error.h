@@ -1,8 +1,6 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include <string>
-
 
 /* -------------------------------------------------- */
 // exception error class
@@ -15,8 +13,10 @@ class Error {
 		Error( std::string err = "_unexpected_error" ) :
 			_error(err)
 		{ }
-		const std::string& what() 
-			{ return this->_error; }
+		const char* what() const
+		{
+			return this->_error.data();
+		}
 		
 };
 

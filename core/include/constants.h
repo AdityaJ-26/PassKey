@@ -5,15 +5,6 @@
 #include <string>
 #include "alloc.h"
 
-
-enum FileTypes {
-	vault = 0,
-	userSettings = 1,
-	key = 2,
-	pass = 3
-};
-
-
 /* -------------------------------------------------- */
 // name aliases
 /* -------------------------------------------------- */
@@ -26,7 +17,12 @@ using CharBuffer = std::vector<unsigned char>;
 // numeric constants
 /* -------------------------------------------------- */
 
-// 8 * 4 - uint64_t length variable | 24 * 2 - nonce size | 30 - username | 20 - password | 1 - passProtected
-constexpr uint64_t PADDING_SIZE = 161;
+/* 
+* 8 bytes * 4 - uint64_t length variable 
+* 24 bytes * 2 - nonce size 
+* 30 bytes - username 
+* 20 bytes - password 
+*/
+constexpr uint64_t PADDING_SIZE = 160;
 
 #endif  // ! CONTANTS_H 

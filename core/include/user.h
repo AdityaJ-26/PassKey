@@ -3,9 +3,6 @@
 
 #include <string>
 
-#include "constants.h"
-#include "files.h"
-
 class User {
 	private:
 		std::string name;

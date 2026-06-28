@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "sodium.h"
+#include "sodium/utils.h"
 
 #include "constants.h"
 #include "data.h"
