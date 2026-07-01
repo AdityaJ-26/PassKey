@@ -1,23 +1,21 @@
 #ifndef SECURITY_H
 #define SECURITY_H
 
-#include "alloc.h"
 #include "files.h"
 
 // cryptography texts generation inline functions
-inline CharBuffer generateNonce();
-inline SecureCharBuffer keygen();
+CharBuffer generateNonce();
+SecureCharBuffer keygen();
 
 // key decryption verification functions
-bool verification(const SecureCharBuffer&, const CharBuffer&, const CharBuffer&);
-bool unlock(const SecureCharBuffer&, const CharBuffer&, const CharBuffer&, SecureCharBuffer&);
+bool unlock(SecureCharBuffer&, SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
 
 // key generation/creation
-void generatePassKey(const SecureCharBuffer&, const CharBuffer&);
+SecureCharBuffer generatePassKey(const SecureString&, const CharBuffer&);
 
 // key encryption/decryption funcitons
-SecureCharBuffer generateEncryptionKey(const CharBuffer&, const CharBuffer&);
-SecureCharBuffer decryptKey(const CharBuffer&, const CharBuffer&, const SecureCharBuffer&, const SecureCharBuffer&);
+SecureCharBuffer generateEncryptionKey(SecureString&, const CharBuffer&, const CharBuffer&);
+bool decryptKey(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
 
 
 #endif // !SECURITY_H

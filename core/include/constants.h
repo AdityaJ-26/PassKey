@@ -23,6 +23,7 @@ using CharBuffer = std::vector<unsigned char>;
 * 30 bytes - username 
 * 20 bytes - password 
 */
-constexpr uint64_t PADDING_SIZE = 160;
+constexpr uint64_t DATA_BUFFER_SIZE = 160;
+constexpr uint64_t META_BUFFER_SIZE = 32;
 
 #endif  // ! CONTANTS_H 

@@ -2,7 +2,6 @@
 
 #include "data.h"
 #include "error.h"
-#include "utils.h"
 #include "security.h"
 
 
@@ -19,12 +18,19 @@ Data::Data() :
 Data::Data(
 	const SecureCharBuffer& pass, 
 	const SecureCharBuffer& user, 
-	const CharBuffer& metadata,
-	const SecureCharBuffer& key) :
-	metadata{metadata}
+	const SecureCharBuffer& key)
 { 
 	encrypt(pass, user, key);
 }
+
+Data::Data(
+	const SecureCharBuffer& pass,
+	const CharBuffer& pass_nonce,
+	const SecureCharBuffer& user,
+	const CharBuffer& user_nonce) :
+	encrypt_password(pass), password_nonce(pass_nonce),
+	encrypt_username(user), username_nonce(user_nonce)
+{ }
 
 /*
 * zeroes the memory of data members
@@ -108,10 +114,6 @@ void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureC
 /* -------------------------------------------------- */
 // public functions
 /* -------------------------------------------------- */
-const CharBuffer& Data::getMetaData() const
-{
-	return this->metadata;
-}
 
 void Data::getEncryptedData(SecureCharBuffer& enc_pass, CharBuffer& pass_nonce, SecureCharBuffer& enc_user, CharBuffer& user_nonce) const 
 {

@@ -5,14 +5,14 @@
 /* -------------------------------------------------- */
 // repeated generation functions
 /* -------------------------------------------------- */
-inline CharBuffer generateNonce()
+CharBuffer generateNonce()
 {
 	CharBuffer nonce(crypto_secretbox_NONCEBYTES);
-	randombytes_buf(nonce.data(), nonce.size());
+	randombytes_buf(nonce.data(), crypto_secretbox_NONCEBYTES);
 	return nonce;
 }
 
-inline SecureCharBuffer keygen()
+SecureCharBuffer keygen()
 {
 	SecureCharBuffer key(crypto_secretbox_KEYBYTES);
 	crypto_secretbox_keygen(key.data());
@@ -21,37 +21,19 @@ inline SecureCharBuffer keygen()
 
 
 /* -------------------------------------------------- */
-// key unlock and verification functions
+// key unlock function
 /* -------------------------------------------------- */
 /*
 * prompt for master password and decrypts the encryption_key
 */
-bool verification(const SecureCharBuffer& encrypted_key, const CharBuffer& salt, const CharBuffer& nonce)
+bool unlock(SecureCharBuffer& encrypted_key, SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key)
 {
-	SecureString password;
-	std::cout << "Enter password : ";
-	std::cin >> password;
-
-	SecureCharBuffer pass_key = generatePassKey(password, salt);
-	zero(password);
-	zero(salt);
-
-	SecureCharBuffer encryption_key(encrypted_key.size() - crypto_secretbox_MACBYTES);
-	return decryptKey(pass_key, nonce, encrypted_key, encryption_key);
-}
-
-bool unlock(const SecureCharBuffer& encrypted_key, const CharBuffer& salt, const CharBuffer& nonce, SecureCharBuffer& encryption_key)
-{
-	SecureString password;
-	std::cout << "Enter password : ";
-	std::cin >> password;
-
 	SecureCharBuffer pass_key = generatePassKey(password, salt);
 	zero(password);
 	zero(salt);
 
 	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
-	decryptKey(pass_key, nonce, encrypted_key, encryption_key);
+	return decryptKey(pass_key, nonce, encrypted_key, encryption_key);
 }
 
 
@@ -90,20 +72,16 @@ SecureCharBuffer generatePassKey(const SecureString& password, const CharBuffer&
 * generates a random encryption key
 * uses passkey generated from master password, and encrypts the encryption key
 */
-SecureCharBuffer generateEncryptionKey(const CharBuffer& salt, const CharBuffer& nonce) {
-	SecureString password;
-	std::cout << "Enter Vault Password: ";
-	std::cin >> password;
-
+SecureCharBuffer generateEncryptionKey(SecureString& password, const CharBuffer& salt, const CharBuffer& nonce) 
+{
 	SecureCharBuffer pass_key = generatePassKey(password, salt);
 
 	zero(password);
 
-	SecureCharBuffer encryption_key(crypto_secretbox_KEYBYTES);
+	SecureCharBuffer encryption_key = keygen();
 	SecureCharBuffer encrypted_key(crypto_secretbox_MACBYTES + encryption_key.size());
 		
 	{
-		crypto_secretbox_keygen(encryption_key.data());
 		if (crypto_secretbox_easy(
 			encrypted_key.data(),
 			encryption_key.data(),
@@ -114,7 +92,7 @@ SecureCharBuffer generateEncryptionKey(const CharBuffer& salt, const CharBuffer&
 			throw Error{ "_encrypt_error : failed to encrypt key" };
 		}
 	}
-
+	zero(encryption_key);
 	return encrypted_key;
 }
 
@@ -122,7 +100,7 @@ SecureCharBuffer generateEncryptionKey(const CharBuffer& salt, const CharBuffer&
 /* -------------------------------------------------- */
 // encryption_key decryption
 /* -------------------------------------------------- */
-bool decryptKey(const SecureCharBuffer& pass_key, const CharBuffer& nonce, const SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key) 
+bool decryptKey(SecureCharBuffer& pass_key, CharBuffer& nonce, SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key) 
 {
 	SecureCharBuffer encryption_key(enc_key.size() - crypto_secretbox_MACBYTES);
 	if (crypto_secretbox_open_easy(

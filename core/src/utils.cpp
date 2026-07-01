@@ -60,3 +60,27 @@ std::ostream& operator <<( std::ostream& out, const CharBuffer& data )
 	out << std::endl;
 	return out;
 }
+
+
+void zero(CharBuffer& data)
+{
+	sodium_memzero(data.data(), data.size());
+}
+
+void zero(SecureCharBuffer& data)
+{
+	sodium_memzero(data.data(), data.size());
+}
+void zero(SecureString& data)
+{
+	sodium_memzero(data.data(), data.size());
+}
+
+
+void toLower(CharBuffer& data) 
+{
+	for (auto& e : data) 
+	{
+		e = tolower(e);
+	}
+}

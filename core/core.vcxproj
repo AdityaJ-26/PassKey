@@ -167,13 +167,13 @@
     <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\files.cpp" />
     <ClCompile Include="src\security.cpp" />
+    <ClCompile Include="src\system.cpp" />
     <ClCompile Include="src\user.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\alloc.h" />
     <ClInclude Include="include\constants.h" />
-    <ClInclude Include="core.h" />
     <ClInclude Include="include\crypto\data.h" />
     <ClInclude Include="include\crypto\encrypt.h" />
     <ClInclude Include="include\crypto\functions.h" />
@@ -182,6 +182,7 @@
     <ClInclude Include="include\crypto\user.h" />
     <ClInclude Include="include\files.h" />
     <ClInclude Include="include\security.h" />
+    <ClInclude Include="include\system.h" />
     <ClInclude Include="include\user.h" />
     <ClInclude Include="include\utils.h" />
   </ItemGroup>
