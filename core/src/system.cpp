@@ -131,31 +131,36 @@ void System::createNewUser()
 	std::cout << "Enter Hardware Path : ";
 	std::cin >> hardware_path;
 
-	if (!sys_files->verifyDirectory(hardware_path)) {
+	if (!sys_files->verifyDirectory(hardware_path)) 
+	{
 		std::cout << "Entered Hardware Path cannot be found.. \n";
 		std::cout << "Connect the hardware key and try again\n";
 
 		int choice;
 		while (true) {
 			std::cout << "1. Exit\n";
-			std::cout << "2. Retry Connection";
+			std::cout << "2. Retry Connection\n";
 			std::cout << "Enter Choice : ";
+			std::cin.ignore();
 			std::cin >> choice;
 
-			if (choice == 1) break;
+			if (choice == 1)
+			{
+				exit(0);
+			}
 			else if (choice == 2 && sys_files->verifyDirectory(hardware_path)) 
 			{
 				std::cout << "Hardware Key not detected, try again\n";
+				std::cout << "New User Created\n";
 			}
 		}
 	}
 	sys_files->storeUserData(hardware_path, name);
-	std::cout << "New User Created\n";
-
+	sys_files->createKeyFile(hardware_path);
 	createKey();
 }
 
-void System::unlockKey() {
+void System::unlockKey() { 
 	SecureString password;
 	std::cout << "Enter Vault Password : ";
 	std::cin >> password;

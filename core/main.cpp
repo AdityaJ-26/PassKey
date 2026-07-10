@@ -46,9 +46,15 @@ int main(void)
 				case '3':
 					app->displayEntry();
 					break;
+				case '4':
+					std::cout << "Exiting\n";
+					std::cout << "Press Enter to Continue";
+					std::getchar();
+					break;
 				default:
 					std::cout << "Invalid Choice\n" << "Try Again\n";
 			}
+			if (choice == 'e') break;
 		}
 
 	}

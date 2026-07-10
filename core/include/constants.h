@@ -12,7 +12,6 @@ using SecureCharBuffer = std::vector<unsigned char, SecureAllocator<unsigned cha
 using SecureString = std::basic_string<char, std::char_traits<char>, SecureAllocator<char>>;
 using CharBuffer = std::vector<unsigned char>;
 
-
 /* -------------------------------------------------- */
 // numeric constants
 /* -------------------------------------------------- */
@@ -20,10 +19,10 @@ using CharBuffer = std::vector<unsigned char>;
 /* 
 * 8 bytes * 4 - uint64_t length variable 
 * 24 bytes * 2 - nonce size 
-* 30 bytes - username 
-* 20 bytes - password 
+* 88 bytes - 72 bytes username  + 16 macbytes
+* 88 bytes - 72 bytes password + 16 macbytes
 */
-constexpr uint64_t DATA_BUFFER_SIZE = 160;
+constexpr uint64_t DATA_BUFFER_SIZE = 256;
 constexpr uint64_t META_BUFFER_SIZE = 32;
 
 #endif  // ! CONTANTS_H 

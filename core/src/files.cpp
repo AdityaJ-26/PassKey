@@ -15,7 +15,8 @@ FileHandles::~FileHandles()
 
 bool FileHandles::verifyDirectory(std::string& path) const
 {
-	if (std::filesystem::exists(path)) return true;
+	std::filesystem::path tempPath = path;
+	if (std::filesystem::exists(tempPath.parent_path())) return true;
 	else return false;
 }
 
@@ -25,11 +26,10 @@ bool FileHandles::verifyDirectory(std::string& path) const
 template <typename T>
 void FileHandles::write(std::fstream& file, const T& msg)
 {
-	if (!file) 
+	if (!file.is_open()) 
 	{
 		throw Error{ "_file_error : null file pointer" };
 	}
-
 	uint64_t len = msg.size();
 	file.write(reinterpret_cast<const char*>(&len), sizeof(len));
 	file.write(reinterpret_cast<const char*>(msg.data()), len);
@@ -38,7 +38,7 @@ void FileHandles::write(std::fstream& file, const T& msg)
 template <typename T>
 bool FileHandles::read(std::fstream& file, T& msg) 
 {
-	if (!file) 
+	if (!file.is_open()) 
 	{
 		throw Error{ "_file_error : null file pointer" };
 	}
@@ -56,7 +56,7 @@ template <typename T>
 T FileHandles::read(std::fstream& file) 
 {
 	T msg;
-	if (!file) 
+	if (!file.is_open()) 
 	{
 		throw Error{ "_file_error : null file pointer" };
 	}
@@ -75,11 +75,21 @@ T FileHandles::read(std::fstream& file)
 // key functions
 /* -------------------------------------------------- */
 
+void FileHandles::createKeyFile(const std::string& path)
+{
+	this->key_path = path;
+	if (!std::filesystem::exists(key_path.parent_path())) 
+	{
+		std::filesystem::create_directories(key_path.parent_path());
+	}
+	std::fstream key_file;
+	key_file.open(key_path, std::ios::binary | std::ios::out);
+	key_file.close();
+}
+
 // opens key file and if key_path not loaded, loads user and if user not load
 void FileHandles::openKeyFile(std::fstream& key_file)
 {
-	std::string name;
-
 	if (key_file.is_open())
 	{
 		return;
@@ -87,6 +97,7 @@ void FileHandles::openKeyFile(std::fstream& key_file)
 
 	if (key_path.empty())
 	{
+		std::string name;
 		if (retrieveUserSettings(name) == false)
 		{
 			std::cout << "Hardware Device Not Connected..." << std::endl;
@@ -94,7 +105,7 @@ void FileHandles::openKeyFile(std::fstream& key_file)
 		}
 	}
 
-	key_file.open(key_path, std::ios::binary | std::ios::in);
+	key_file.open(key_path, std::ios::binary | std::ios::in | std::ios::out);
 	if (!key_file.is_open())
 	{
 		throw Error{ "_file_error : failed to access key file" };
@@ -123,15 +134,16 @@ void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer
 void FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce)
 {
 	std::fstream key_file;
-	openKeyFile(key_file);
+	key_file.open(key_path, std::ios::binary | std::ios::in);
 
-	if (read(key_file, salt) &&
+	if (!(read(key_file, salt) &&
 		read(key_file, nonce) &&
 		read(key_file, enc_key)
-		)
+		))
 	{
 		throw Error{ "_file_error : corrupted key file" };
 	}
+	key_file.close();
 }
 
 
@@ -187,12 +199,14 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 		generateUserFile();
 	}
 	std::string temp;
-	temp = "name,";
+
+	temp = "name=";
 	write(user, temp);
-	temp = "hardware_path,";
-	write(user, name + ";");
+	write(user, name + "\n");
+
+	temp = "hardware_path=";
 	write(user, temp);
-	write(user, hardwareKeyPath + ";");
+	write(user, hardwareKeyPath + "\n");
 	user.flush();
 }
 
@@ -204,25 +218,29 @@ bool FileHandles::retrieveUserSettings(std::string& name)
 		return false;
 	}
 	
-	std::string data;
+	std::string line;
 	user.seekp(0, std::ios::beg);
 
 	bool loaded = false;
 	name.clear();
-	while (std::getline(user, data, ';')) 
+	while (std::getline(user, line)) 
 	{
-		std::stringstream sts{ data };
-		std::string header; 
-
-		std::getline(sts, header, ',');
-		if (header == "name") {
-			std::getline(sts, header, ',');
-			name = header;
-		}
-		else if (header == "hardware_path") 
+		size_t pos = line.find('=');
+		if (pos == std::string::npos)
 		{
-			std::getline(sts, header, ',');
-			this->key_path = header;
+			continue;
+		}
+
+		std::string field = line.substr(0, pos);
+		std::string data = line.substr(pos + 1);
+
+		if (field == "name") 
+		{
+			name = data;
+		}
+		else if (field == "hardware_path")
+		{
+			this->key_path = data;
 			loaded = true;
 		}
 	}
@@ -264,7 +282,7 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int
 	uint64_t data_index = data_offset / DATA_BUFFER_SIZE;
 
 	meta.seekg(0, std::ios::beg);
-	while (meta.read(buffer, sizeof(buffer))) 
+	while (meta.read(reinterpret_cast<char*>(buffer), sizeof(buffer))) 
 	{
 		if (offset_count == offset) 
 		{
@@ -332,7 +350,7 @@ int FileHandles::storeCredentials(
 		enc_user.size() +
 		(crypto_secretbox_NONCEBYTES * 2) +
 		(4 * 8);
-	CharBuffer padding;
+	CharBuffer padding(DATA_BUFFER_SIZE - data_size);
 	randombytes(padding.data(), DATA_BUFFER_SIZE - data_size);
 	write(vault, padding);
 
