@@ -17,10 +17,11 @@
 
 int main(void) 
 {
+	System* app;
 	try {
+		app = new System();
 		init();
 
-		System* app = new System();
 
 		app->loadUser();
 		app->unlockKey();
@@ -50,11 +51,13 @@ int main(void)
 					std::cout << "Exiting\n";
 					std::cout << "Press Enter to Continue";
 					std::getchar();
+					std::getchar();
+					app->exit();
 					break;
 				default:
 					std::cout << "Invalid Choice\n" << "Try Again\n";
 			}
-			if (choice == 'e') break;
+			if (choice == '4') break;
 		}
 
 	}

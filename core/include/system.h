@@ -28,6 +28,7 @@ class System
 		void newEntry();
 		void displayEntry();
 		void displayMetaList() const;
+		void exit();
 };
 
 # endif // ! SYSTEM_H

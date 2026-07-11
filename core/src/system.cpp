@@ -12,6 +12,12 @@ System::System() :
 {
 	loadMetadata();
 }
+System::~System()
+{
+	delete sys_files;
+	meta_list.clear();
+	delete user;
+}
 
 int System::insert(CharBuffer& data) 
 {
@@ -91,6 +97,7 @@ void System::createKey()
 
 void System::loadUser()
 {
+	sys_files->initUser();
 	if (sys_files->retrieveUserSettings(user->nameRef())) 
 	{
 		std::cout << "Welcome " << user->getName() << std::endl;
@@ -111,7 +118,7 @@ void System::loadUser()
 				std::cout << "Exiting..";
 				std::cout << "Press Enter to Continue..";
 				std::getchar();
-				exit(0);
+				::exit(0);
 			default:
 				std::cout << "Invalid Option, Exiting..";
 		}
@@ -146,7 +153,7 @@ void System::createNewUser()
 
 			if (choice == 1)
 			{
-				exit(0);
+				::exit(0);
 			}
 			else if (choice == 2 && sys_files->verifyDirectory(hardware_path)) 
 			{
@@ -230,4 +237,9 @@ void System::displayEntry()
 	std::cout << "Username : " << username << std::endl;
 	std::cout << "Password : " << password << std::endl;
 	delete data;
+}
+
+void System::exit()
+{
+	delete this;
 }

@@ -11,6 +11,9 @@ FileHandles::~FileHandles()
 
 	vault.flush();
 	vault.close();
+
+	meta.flush();
+	meta.close();
 }
 
 bool FileHandles::verifyDirectory(std::string& path) const
@@ -28,7 +31,7 @@ void FileHandles::write(std::fstream& file, const T& msg)
 {
 	if (!file.is_open()) 
 	{
-		throw Error{ "_file_error : null file pointer" };
+		throw Error{ "_file_error : null file pointer" };	
 	}
 	uint64_t len = msg.size();
 	file.write(reinterpret_cast<const char*>(&len), sizeof(len));
@@ -45,7 +48,7 @@ bool FileHandles::read(std::fstream& file, T& msg)
 	uint64_t len{ 0 };
 	if (!file.read(reinterpret_cast<char*>(&len), sizeof(len))) 
 	{
-		throw Error{ "_read_error : error reading data from file" };
+		return false;
 	}
 	msg.resize(len);
 	file.read(reinterpret_cast<char*>(msg.data()), len);
@@ -182,10 +185,10 @@ void FileHandles::generateUserFile()
 	{
 		std::filesystem::create_directories(user_settings.parent_path());
 	}
-	user.open(user_settings, std::ios::out);
+	user.open(user_settings, std::ios::binary | std::ios::out);
 	user.close();
 
-	user.open(user_settings, std::ios::in | std::ios::out);
+	user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
 	if (!user.is_open())
 	{
 		throw Error{ "_file_error : error creating user_file" };
@@ -198,57 +201,49 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 	{
 		generateUserFile();
 	}
-	std::string temp;
 
-	temp = "name=";
-	write(user, temp);
-	write(user, name + "\n");
+	std::string field;
+	field = "name";
+	write(user, field);
+	write(user, name);
 
-	temp = "hardware_path=";
-	write(user, temp);
-	write(user, hardwareKeyPath + "\n");
-	user.flush();
+	field = "hardware_path";
+	write(user, field);
+	write(user, hardwareKeyPath);
 }
 
 bool FileHandles::retrieveUserSettings(std::string& name) 
 {
-	this->user.open(user_settings, std::ios::in | std::ios::out);
-	if (!user.is_open()) 
+	if (!std::filesystem::exists(user_settings)) 
 	{
 		return false;
 	}
-	
-	std::string line;
-	user.seekp(0, std::ios::beg);
+	if (!user.is_open()) 
+	{
+		user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
+	}
 
 	bool loaded = false;
-	name.clear();
-	while (std::getline(user, line)) 
+	std::string data;
+	while (true)
 	{
-		size_t pos = line.find('=');
-		if (pos == std::string::npos)
+		if (read(user, data))
 		{
-			continue;
+			if (data == "name")
+			{
+				read(user, data);
+				name = data;
+			}
+			else if (data == "hardware_path")
+			{
+				read(user, data);
+				key_path = data;
+				loaded = true;
+			}
 		}
-
-		std::string field = line.substr(0, pos);
-		std::string data = line.substr(pos + 1);
-
-		if (field == "name") 
+		else
 		{
-			name = data;
-		}
-		else if (field == "hardware_path")
-		{
-			this->key_path = data;
-			loaded = true;
-		}
-	}
-	if (loaded) 
-	{
-		if (name.empty()) 
-		{
-			name = "User";
+			break;
 		}
 	}
 	return loaded;
@@ -264,7 +259,7 @@ bool FileHandles::retrieveUserSettings(std::string& name)
 	data_offset -> metadata
 * uses temporary file to store data with new metadata insertion at correct sorted position
 * reads as buffers and write till correct index is found
-* as new credential entries are rare inserting new entry uses this method
+* as new credential entries are rare compared to accessing inserting new entry uses this costlier method
 */
 void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int offset) 
 {
@@ -282,12 +277,16 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int
 	uint64_t data_index = data_offset / DATA_BUFFER_SIZE;
 
 	meta.seekg(0, std::ios::beg);
-	while (meta.read(reinterpret_cast<char*>(buffer), sizeof(buffer))) 
+	while (true) 
 	{
 		if (offset_count == offset) 
 		{
 			temp_meta.write(reinterpret_cast<const char*>(&data_index), sizeof(data_index));
 			write(temp_meta, metadata);
+		}
+		if (!meta.read(reinterpret_cast<char*>(buffer), sizeof(buffer)))
+		{
+			break;
 		}
 		offset_count++;
 		temp_meta.write(buffer, sizeof(buffer));
