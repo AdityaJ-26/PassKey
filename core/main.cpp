@@ -24,8 +24,12 @@ int main(void)
 
 
 		app->loadUser();
-		app->unlockKey();
+		if (!app->unlockKey())
+		{
+			exit(0);
+		}
 
+		app->loadMetadata();
 		char choice;
 		while (true) 
 		{
@@ -52,13 +56,13 @@ int main(void)
 					std::cout << "Press Enter to Continue";
 					std::getchar();
 					std::getchar();
-					app->exit();
 					break;
 				default:
 					std::cout << "Invalid Choice\n" << "Try Again\n";
 			}
 			if (choice == '4') break;
 		}
+		app->exit();
 
 	}
 	catch (Error& e) 
@@ -68,6 +72,10 @@ int main(void)
 	catch (std::exception& e) 
 	{
 		std::cout << e.what();
+	}
+	catch (...)
+	{
+		std::cout << "unexpected error" << std::endl;
 	}
 	return 0;
 }

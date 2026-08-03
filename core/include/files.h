@@ -48,11 +48,11 @@ class FileHandles {
 
 		// data operations
 
-		void storeMetadata(const CharBuffer&, int, int);
-		int readMetadata(CharBuffer&, int);
-		int getOffset(int);
-		int storeCredentials(const SecureCharBuffer&, const CharBuffer&, const SecureCharBuffer&, const CharBuffer&);
-		bool retrieveCredentials(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, CharBuffer&, int);
+		void storeMetadata(const CharBuffer&, uint64_t, int);
+		uint64_t readMetadata(CharBuffer&, int);
+		uint64_t getOffset(int);
+		uint64_t storeCredentials(const SecureCharBuffer&, const CharBuffer&, const SecureCharBuffer&, const CharBuffer&);
+		bool retrieveCredentials(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, CharBuffer&, uint64_t);
 };
 
 #endif // !FILES_H

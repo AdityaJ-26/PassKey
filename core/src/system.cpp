@@ -8,10 +8,10 @@
 
 System::System() :
 	sys_files(new FileHandles()),
-	user(new User())
-{
-	loadMetadata();
-}
+	user(new User()),
+	meta_list(std::vector<CharBuffer>())
+{}
+
 System::~System()
 {
 	delete sys_files;
@@ -32,22 +32,23 @@ int System::insert(CharBuffer& data)
 			break;
 	}
 	meta_list.insert(meta_list.begin() + index, data);
+
 	return index;
 }
 
 int System::find(const CharBuffer& data) const
 {
 	int low = 0;
-	int high = meta_list.size();
+	int high = meta_list.size() - 1;
 
-	while (low <= high) 
+	while (low <= high)
 	{
-		int mid = (high - low) / 2 + low / 2;
-		if (meta_list[mid] > data) 
+		int mid = (high - low) / 2 + low;
+		if (toLower(meta_list[mid]) > toLower(data)) 
 		{
 			high = mid - 1;
 		}
-		else if (meta_list[mid] < data)
+		else if (toLower(meta_list[mid]) < toLower(data))
 		{
 			low = mid + 1;
 		}
@@ -63,7 +64,8 @@ void System::loadMetadata()
 {
 	CharBuffer data;
 	int offset{ 0 };
-	while (sys_files->readMetadata(data, offset) != -1) 
+	int count{ 0 };
+	while (sys_files->readMetadata(data, offset) != 1) 
 	{
 		offset++;
 		this->meta_list.push_back(data);
@@ -98,18 +100,20 @@ void System::createKey()
 void System::loadUser()
 {
 	sys_files->initUser();
+
 	if (sys_files->retrieveUserSettings(user->nameRef())) 
 	{
 		std::cout << "Welcome " << user->getName() << std::endl;
 		std::cout << "Press Enter to Continue..";
-		std::getchar();
+		char c = std::getchar();
 	}
 	else {
+		char c;
 		std::cout << "No user exists..\n";
 		std::cout << "Create New User (y/n) : ";
-		char c;
 		std::cin >> c;
 		std::cin.ignore();
+
 		switch (c) {
 			case 'y':
 				createNewUser();
@@ -117,7 +121,7 @@ void System::loadUser()
 			case 'n':
 				std::cout << "Exiting..";
 				std::cout << "Press Enter to Continue..";
-				std::getchar();
+				c = std::getchar();
 				::exit(0);
 			default:
 				std::cout << "Invalid Option, Exiting..";
@@ -159,6 +163,7 @@ void System::createNewUser()
 			{
 				std::cout << "Hardware Key not detected, try again\n";
 				std::cout << "New User Created\n";
+				break;
 			}
 		}
 	}
@@ -167,7 +172,7 @@ void System::createNewUser()
 	createKey();
 }
 
-void System::unlockKey() { 
+bool System::unlockKey() { 
 	SecureString password;
 	std::cout << "Enter Vault Password : ";
 	std::cin >> password;
@@ -178,7 +183,9 @@ void System::unlockKey() {
 
 	sys_files->retrieveKeyData(enc_key, salt, nonce);
 
+	bool unlocked = false;
 	if (unlock(enc_key, password, salt, nonce, vault_key)) {
+		unlocked = true;
 		std::cout << "Correct Password\n";
 	}
 	else {
@@ -186,6 +193,7 @@ void System::unlockKey() {
 	}
 	zero(nonce);
 	zero(salt);
+	return unlocked;
 }
 
 void System::newEntry() {
@@ -199,15 +207,13 @@ void System::newEntry() {
 	input(username);
 	std::cout << "Enter Password : ";
 	input(password);
-
-	Data* data = new Data(username, password, vault_key);
+	
+	Data data(username, password, vault_key);
 	CharBuffer user_nonce, pass_nonce;
-	data->getEncryptedData(password, pass_nonce, username, user_nonce);
-	delete data;
+	data.getEncryptedData(password, pass_nonce, username, user_nonce);
 
-	int data_offset = sys_files->storeCredentials(password, pass_nonce, username, user_nonce);
+	int64_t data_offset = sys_files->storeCredentials(password, pass_nonce, username, user_nonce);
 	int offset = insert(metadata);
-	toLower(metadata);																				// normalise metadata
 	sys_files->storeMetadata(metadata, data_offset, offset);
 }
 
@@ -222,7 +228,7 @@ void System::displayEntry()
 		std::cout << "No matching entry\n";
 		return;
 	}
-	int offset = sys_files->getOffset(index);
+	uint64_t offset = sys_files->getOffset(index);
 
 	SecureCharBuffer password;
 	SecureCharBuffer username;
@@ -230,13 +236,13 @@ void System::displayEntry()
 	CharBuffer pass_nonce;
 
 	sys_files->retrieveCredentials(password, pass_nonce, username, user_nonce, offset);
-
-	Data* data = new Data(password, pass_nonce, username, user_nonce);
-	data->decrypt(password, username, vault_key);
+	Data data(password, pass_nonce, username, user_nonce);
+	data.decrypt(password, username, vault_key);
+	zero(user_nonce);
+	zero(pass_nonce);
 
 	std::cout << "Username : " << username << std::endl;
 	std::cout << "Password : " << password << std::endl;
-	delete data;
 }
 
 void System::exit()

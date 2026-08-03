@@ -17,6 +17,9 @@ void zero(CharBuffer&);
 void zero(SecureCharBuffer&);
 void zero(SecureString&);
 
-void toLower(CharBuffer&);
+void printHex(const CharBuffer);
+void printHex(const SecureCharBuffer);
+
+CharBuffer toLower(CharBuffer);
 
 #endif // ! UTILS_H

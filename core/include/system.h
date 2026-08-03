@@ -13,7 +13,6 @@ class System
 		std::vector<CharBuffer> meta_list;
 
 	private:
-		void loadMetadata();
 		int insert(CharBuffer&);
 		int find(const CharBuffer&) const;
 		void createKey();
@@ -24,7 +23,8 @@ class System
 
 		void loadUser();
 		void createNewUser();
-		void unlockKey();
+		void loadMetadata();
+		bool unlockKey();
 		void newEntry();
 		void displayEntry();
 		void displayMetaList() const;

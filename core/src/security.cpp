@@ -92,6 +92,7 @@ SecureCharBuffer generateEncryptionKey(SecureString& password, const CharBuffer&
 			throw Error{ "_encrypt_error : failed to encrypt key" };
 		}
 	}
+
 	zero(encryption_key);
 	return encrypted_key;
 }

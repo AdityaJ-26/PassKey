@@ -165,14 +165,16 @@ void FileHandles::initUser()
 	}
 
 	vault.open(vault_path, std::ios::binary | std::ios::in | std::ios::app);
-	if (vault.is_open()) {
+	if (vault.is_open()) 
+	{
 		vault.open(vault_path, std::ios::binary | std::ios::out);
 		vault.close();
-		vault.open(vault_path, std::ios::binary | std::ios::in | std::ios::app);
+		vault.open(vault_path, std::ios::binary | std::ios::in | std::ios::out);
 	}
 
 	meta.open(meta_path, std::ios::binary | std::ios::in);
-	if (meta.is_open()) {
+	if (meta.is_open()) 
+	{
 		meta.open(meta_path, std::ios::binary | std::ios::out);
 		meta.close();
 		meta.open(meta_path, std::ios::binary | std::ios::in);
@@ -261,8 +263,9 @@ bool FileHandles::retrieveUserSettings(std::string& name)
 * reads as buffers and write till correct index is found
 * as new credential entries are rare compared to accessing inserting new entry uses this costlier method
 */
-void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int offset) 
+void FileHandles::storeMetadata(const CharBuffer& metadata, uint64_t data_index, int offset) 
 {
+	meta.clear();
 	std::filesystem::path new_path = meta_path.parent_path() / "temp.bin";
 	std::fstream temp_meta;
 	temp_meta.open(new_path, std::ios::binary | std::ios::out);
@@ -272,9 +275,8 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int
 		throw Error{ "_file_error : cannot access files for data entry" };
 	}
 
-	char* buffer = new char(META_BUFFER_SIZE);
+	char* buffer = new char[META_BUFFER_SIZE];
 	uint64_t offset_count{ 0 };
-	uint64_t data_index = data_offset / DATA_BUFFER_SIZE;
 
 	meta.seekg(0, std::ios::beg);
 	while (true) 
@@ -283,18 +285,24 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int
 		{
 			temp_meta.write(reinterpret_cast<const char*>(&data_index), sizeof(data_index));
 			write(temp_meta, metadata);
+			CharBuffer padding(META_BUFFER_SIZE - (sizeof(data_index) + metadata.size() + (sizeof(uint64_t) * 2)));
+			randombytes(padding.data(), padding.size());
+			write(temp_meta, padding);
 		}
-		if (!meta.read(reinterpret_cast<char*>(buffer), sizeof(buffer)))
+		if (!meta.read(reinterpret_cast<char*>(buffer), META_BUFFER_SIZE))
 		{
 			break;
 		}
 		offset_count++;
-		temp_meta.write(buffer, sizeof(buffer));
+		temp_meta.write(buffer, META_BUFFER_SIZE);
 	}
 
 	if (offset_count < offset) {
 		temp_meta.write(reinterpret_cast<const char*>(&data_index), sizeof(data_index));
 		write(temp_meta, metadata);
+		CharBuffer padding(META_BUFFER_SIZE - (sizeof(data_index) + metadata.size() + (sizeof(uint64_t) * 2)));
+		randombytes(padding.data(), padding.size());
+		write(temp_meta, padding);
 	}
 
 	temp_meta.close();
@@ -303,25 +311,32 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, int data_offset, int
 	std::filesystem::remove(meta_path);
 	std::filesystem::rename(new_path, meta_path);
 	meta.open(meta_path, std::ios::binary | std::ios::in);
+	delete buffer;
 }
 
-int FileHandles::getOffset(int offset)
+/*
+* using meta.clear() as meta is getting to EOF while loading metadata into meta_list, this sets the eofbit and if the last read operation fails
+* it sets failbit that stops all seek() operations on fstream and fails the system
+*/
+uint64_t FileHandles::getOffset(int offset)
 {
+	meta.clear();
 	meta.seekg(offset * META_BUFFER_SIZE, std::ios::beg);
-	uint64_t data_offset;
+	uint64_t data_offset{ 0 };
 	meta.read(reinterpret_cast<char*>(&data_offset), sizeof(data_offset));
 	return data_offset;
 }
 
-int FileHandles::readMetadata(CharBuffer& metadata, int offset) 
+uint64_t FileHandles::readMetadata(CharBuffer& metadata, int offset) 
 {
-	uint64_t data_offset{ 0 };
+	uint64_t data_offset{ 1 };
 	meta.seekg(offset * META_BUFFER_SIZE, std::ios::beg);
+	metadata.clear();
 	if (!meta.read(reinterpret_cast<char*>(&data_offset), sizeof(data_offset))) 
 	{
-		return -1;
+		return data_offset;
 	}
-	metadata = read<CharBuffer>(meta);
+	read(meta, metadata);
 	return data_offset;
 }
 
@@ -332,12 +347,12 @@ int FileHandles::readMetadata(CharBuffer& metadata, int offset)
 	len(user) -> user ->
 	len(user_nonce) -> user_nonce
 */
-int FileHandles::storeCredentials(
+uint64_t FileHandles::storeCredentials(
 	const SecureCharBuffer& enc_pass, const CharBuffer& pass_nonce, 
 	const SecureCharBuffer& enc_user, const CharBuffer& user_nonce) 
 {
-	int pointer_offset = vault.tellp();
 	vault.seekp(0, std::ios::end);
+	uint64_t pointer_offset = static_cast<std::streamoff>(vault.tellp());
 	write(vault, enc_pass);
 	write(vault, pass_nonce);
 	write(vault, enc_user);
@@ -348,11 +363,12 @@ int FileHandles::storeCredentials(
 		enc_pass.size() +
 		enc_user.size() +
 		(crypto_secretbox_NONCEBYTES * 2) +
-		(4 * 8);
-	CharBuffer padding(DATA_BUFFER_SIZE - data_size);
-	randombytes(padding.data(), DATA_BUFFER_SIZE - data_size);
+		(4 * sizeof(uint64_t));
+	CharBuffer padding(DATA_BUFFER_SIZE - data_size - sizeof(uint64_t));
+	randombytes(padding.data(), padding.size());
 	write(vault, padding);
 
+	vault.flush();
 	return pointer_offset;
 }
 
@@ -363,9 +379,9 @@ int FileHandles::storeCredentials(
 bool FileHandles::retrieveCredentials(
 	SecureCharBuffer& enc_pass, CharBuffer& pass_nonce, 
 	SecureCharBuffer& enc_user, CharBuffer& user_nonce,
-	int offset)
+	uint64_t offset)
 {
-	vault.seekg(offset * DATA_BUFFER_SIZE, std::ios::beg); // move to indexed data
+	vault.seekg(offset, std::ios::beg); // move to indexed data
 	return
 		read(vault, enc_pass) &&
 		read(vault, pass_nonce) &&

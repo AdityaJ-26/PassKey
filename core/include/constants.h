@@ -14,7 +14,7 @@ using CharBuffer = std::vector<unsigned char>;
 
 /* -------------------------------------------------- */
 // numeric constants
-/* -------------------------------------------------- */
+/* -------------------------------------------------- */  
 
 /* 
 * 8 bytes * 4 - uint64_t length variable 
@@ -23,6 +23,12 @@ using CharBuffer = std::vector<unsigned char>;
 * 88 bytes - 72 bytes password + 16 macbytes
 */
 constexpr uint64_t DATA_BUFFER_SIZE = 256;
-constexpr uint64_t META_BUFFER_SIZE = 32;
+
+/*
+* 8 bytes - uint64_t data_index
+* 8 bytes - metadata size
+* 48 bytes - metadata
+*/
+constexpr uint64_t META_BUFFER_SIZE = 64;
 
 #endif  // ! CONTANTS_H 

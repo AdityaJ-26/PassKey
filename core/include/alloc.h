@@ -59,7 +59,7 @@ class SecureAllocator {
 			if (ptr) {
 				sodium_memzero(reinterpret_cast<void*>(ptr), numObjects);
 			}
-			sodium_free(ptr);
+				sodium_free(ptr);
 		}
 
 		// optional function to get max size that can be allocated

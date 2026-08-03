@@ -77,10 +77,24 @@ void zero(SecureString& data)
 }
 
 
-void toLower(CharBuffer& data) 
+CharBuffer toLower(CharBuffer data) 
 {
 	for (auto& e : data) 
 	{
 		e = tolower(e);
 	}
+	return data;
+}
+
+void printHex(const CharBuffer data) 
+{
+	for (unsigned char c : data)
+		printf("%02x", c);
+	puts("");
+}
+void printHex(const SecureCharBuffer data) 
+{
+	for (unsigned char c : data)
+		printf("%02x", c);
+	puts("");
 }

@@ -3,6 +3,7 @@
 #include "data.h"
 #include "error.h"
 #include "security.h"
+#include "utils.h"
 
 
 /* -------------------------------------------------- */
@@ -16,11 +17,11 @@ Data::Data() :
 { }
 
 Data::Data(
-	const SecureCharBuffer& pass, 
-	const SecureCharBuffer& user, 
-	const SecureCharBuffer& key)
+	const SecureCharBuffer& username, 
+	const SecureCharBuffer& password, 
+	const SecureCharBuffer& vault_key)
 { 
-	encrypt(pass, user, key);
+	encrypt(username, password, vault_key);
 }
 
 Data::Data(
