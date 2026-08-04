@@ -22,9 +22,8 @@ class Data {
 		Data(const SecureCharBuffer&, const CharBuffer&, const SecureCharBuffer&, const CharBuffer&);
 		~Data();
 
-		const CharBuffer& getMetaData() const;
-		void getEncryptedData(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, CharBuffer&) const;
 		void getData(SecureCharBuffer&, SecureCharBuffer&, const SecureCharBuffer&) const;
+		void getEncryptedData(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, CharBuffer&) const;
 		void decrypt(SecureCharBuffer&, SecureCharBuffer&, const SecureCharBuffer& ) const;
 };
 

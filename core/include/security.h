@@ -5,17 +5,17 @@
 
 // cryptography texts generation inline functions
 CharBuffer generateNonce();
-SecureCharBuffer keygen();
-
-// key decryption verification functions
-bool unlock(SecureCharBuffer&, SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
+inline SecureCharBuffer keygen();
 
 // key generation/creation
-SecureCharBuffer generatePassKey(const SecureString&, const CharBuffer&);
+SecureCharBuffer derivePasswordKey(const SecureString&, const CharBuffer&);
 
-// key encryption/decryption funcitons
-SecureCharBuffer generateEncryptionKey(SecureString&, const CharBuffer&, const CharBuffer&);
-bool decryptKey(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
+SecureCharBuffer generateVaultKey(const SecureString&, const CharBuffer&, const CharBuffer&);
+
+// key decryption verification function
+bool decryptVaultKey(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
+bool unlockVaultKey(SecureCharBuffer&, SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
+
 
 
 #endif // !SECURITY_H

@@ -13,8 +13,7 @@ class Error {
 		Error( std::string err = "_unexpected_error" ) :
 			_error(err)
 		{ }
-		const char* what() const
-		{
+		const char* what() const {
 			return this->_error.data();
 		}
 		

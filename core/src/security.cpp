@@ -5,15 +5,13 @@
 /* -------------------------------------------------- */
 // repeated generation functions
 /* -------------------------------------------------- */
-CharBuffer generateNonce()
-{
+CharBuffer generateNonce() {
 	CharBuffer nonce(crypto_secretbox_NONCEBYTES);
 	randombytes_buf(nonce.data(), crypto_secretbox_NONCEBYTES);
 	return nonce;
 }
 
-SecureCharBuffer keygen()
-{
+inline SecureCharBuffer keygen() {
 	SecureCharBuffer key(crypto_secretbox_KEYBYTES);
 	crypto_secretbox_keygen(key.data());
 	return key;
@@ -21,37 +19,18 @@ SecureCharBuffer keygen()
 
 
 /* -------------------------------------------------- */
-// key unlock function
-/* -------------------------------------------------- */
-/*
-* prompt for master password and decrypts the encryption_key
-*/
-bool unlock(SecureCharBuffer& encrypted_key, SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key)
-{
-	SecureCharBuffer pass_key = generatePassKey(password, salt);
-	zero(password);
-	zero(salt);
-
-	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
-	return decryptKey(pass_key, nonce, encrypted_key, encryption_key);
-}
-
-
-/* -------------------------------------------------- */
 // key_derivation(password, salt)
 /* -------------------------------------------------- */
 /*
-* generate a encryption_key from password and salt
+* generate a encryption_key from master_password and salt
 * OPSLIMIT and MEMLIMIT are resources limiting factors, uses more CPU cycles (increasing CPU use) and more memory (increased RAM USAGE)
 * MODERATE variant requires 256 MiB of dedicated RAM and takes about 0.7 seconds on a 2.8 GHz Core i7 CPU [libsodium docs].
 */
-SecureCharBuffer generatePassKey(const SecureString& password, const CharBuffer& salt)
-{
-	SecureCharBuffer pass_key(crypto_secretbox_KEYBYTES);
-
+SecureCharBuffer derivePasswordKey(const SecureString& password, const CharBuffer& salt) {
+	SecureCharBuffer password_derived_key(crypto_secretbox_KEYBYTES);
 	if (crypto_pwhash(
-		pass_key.data(),
-		pass_key.size(),
+		password_derived_key.data(),
+		password_derived_key.size(),
 		password.data(),
 		password.size(),
 		salt.data(),
@@ -60,8 +39,7 @@ SecureCharBuffer generatePassKey(const SecureString& password, const CharBuffer&
 	{
 		throw Error{ "_keygen_error : error deriving key from password " };
 	}
-
-	return pass_key;
+	return password_derived_key;
 }
 
 
@@ -69,25 +47,22 @@ SecureCharBuffer generatePassKey(const SecureString& password, const CharBuffer&
 // keygen and encryption
 /* -------------------------------------------------- */
 /*
-* generates a random encryption key
-* uses passkey generated from master password, and encrypts the encryption key
+* generates a random vault_key and encrypts using crypto_secretbox_easy()
+* key for encryption of vault_key is generated using HKDF from master_password
+* returns the encrypted vault_key
 */
-SecureCharBuffer generateEncryptionKey(SecureString& password, const CharBuffer& salt, const CharBuffer& nonce) 
-{
-	SecureCharBuffer pass_key = generatePassKey(password, salt);
-
-	zero(password);
+SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer& salt, const CharBuffer& nonce)  {
+	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
 
 	SecureCharBuffer encryption_key = keygen();
 	SecureCharBuffer encrypted_key(crypto_secretbox_MACBYTES + encryption_key.size());
-		
 	{
 		if (crypto_secretbox_easy(
 			encrypted_key.data(),
 			encryption_key.data(),
 			encryption_key.size(),
 			nonce.data(),
-			pass_key.data()) != 0)
+			password_derived_key.data()) != 0)
 		{
 			throw Error{ "_encrypt_error : failed to encrypt key" };
 		}
@@ -99,20 +74,19 @@ SecureCharBuffer generateEncryptionKey(SecureString& password, const CharBuffer&
 
 
 /* -------------------------------------------------- */
-// encryption_key decryption
+// vault_key decryption
 /* -------------------------------------------------- */
-bool decryptKey(SecureCharBuffer& pass_key, CharBuffer& nonce, SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key) 
-{
+bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key)  {
 	SecureCharBuffer encryption_key(enc_key.size() - crypto_secretbox_MACBYTES);
 	if (crypto_secretbox_open_easy(
 		encryption_key.data(),
 		enc_key.data(),
 		enc_key.size(),
 		nonce.data(),
-		pass_key.data()) != 0)
+		password_derived_key.data()) != 0)
 	{
 		zero(enc_key);
-		zero(pass_key);
+		zero(password_derived_key);
 		zero(nonce);
 		return false;
 	}
@@ -122,4 +96,17 @@ bool decryptKey(SecureCharBuffer& pass_key, CharBuffer& nonce, SecureCharBuffer&
 	return true;
 }
 
+/* -------------------------------------------------- */
+// vault_key unlock function
+/* -------------------------------------------------- */
+/*
+* unlocks the encrypted_vault_key using password_derived_key and returns success return code (boolean)
+*/
+bool unlockVaultKey(SecureCharBuffer& encrypted_key, SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
+	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
+	zero(password);
+	zero(salt);
 
+	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
+	return decryptVaultKey(password_derived_key, nonce, encrypted_key, encryption_key);
+}

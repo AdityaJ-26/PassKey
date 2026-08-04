@@ -7,19 +7,19 @@
 
 #include "constants.h"
 
-const std::filesystem::path user_settings = "../data/user.bin";
-const std::filesystem::path vault_path = "../data/vault.bin";
-const std::filesystem::path meta_path = "../data/meta.bin";
+const std::filesystem::path user_settings = "data/user.bin";
+const std::filesystem::path vault_path = "data/vault.bin";
+const std::filesystem::path meta_path = "data/meta.bin";
 
 class FileHandles {
 	private:
-		std::fstream meta;													// bin file
-		std::fstream vault;													// bin file
-		std::fstream user;													// text file
+		std::fstream meta;										// bin file
+		std::fstream vault;										// bin file
+		std::fstream user;										// text file
 		std::filesystem::path key_path;
 
+	// file read and write templates for buffers
 	private:
-		// read and write template for Buffers
 		template <typename T>
 		void write(std::fstream&, const T&);
 
@@ -29,10 +29,11 @@ class FileHandles {
 		template <typename T>
 		T read(std::fstream&);
 
+
 	public:
 		FileHandles();
 		~FileHandles();
-		bool verifyDirectory(std::string&) const;	
+		bool verifyDirectory(const std::string&) const;	
 	
 		// key operations
 		void createKeyFile(const std::string&);
@@ -41,10 +42,10 @@ class FileHandles {
 		void retrieveKeyData(SecureCharBuffer&, CharBuffer&, CharBuffer&);
 
 		// user operations
-		void initUser();
+		void initFiles();
 		void generateUserFile();
 		void storeUserData(const std::string&, const std::string&);
-		bool retrieveUserSettings(std::string&);
+		bool loadUserSettings(std::string&);
 
 		// data operations
 

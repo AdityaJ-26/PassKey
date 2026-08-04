@@ -8,10 +8,8 @@
 /* -------------------------------------------------- */
 // sodium init functions wrapper
 /* -------------------------------------------------- */
-void init()
-{
-	if (sodium_init() < 0)
-	{
+void init() {
+	if (sodium_init() < 0) {
 		throw Error{ "_lib_error : error initialising libsodium" };
 	}
 }
@@ -20,16 +18,14 @@ void init()
 /* -------------------------------------------------- */
 // CharBuffer / SecureCharBuffer input methods
 /* -------------------------------------------------- */
-void input( SecureCharBuffer& user )
-{
+void input( SecureCharBuffer& user ) {
 	SecureString input;
 	std::getline(std::cin, input, '\n');
 
 	user = SecureCharBuffer(input.begin(), input.end());
 }
 
-void input( CharBuffer& data ) 
-{
+void input( CharBuffer& data ) {
 	std::string input;
 	std::cin.ignore();
 	std::getline(std::cin, input, '\n');
@@ -41,10 +37,8 @@ void input( CharBuffer& data )
 /* -------------------------------------------------- */
 // operator<< overload for Buffers
 /* -------------------------------------------------- */
-std::ostream& operator <<( std::ostream& out, const SecureCharBuffer& data ) 
-{
-	for (const char& c : data) 
-	{
+std::ostream& operator <<( std::ostream& out, const SecureCharBuffer& data ) {
+	for (const char& c : data) {
 		out << c;
 	}
 	out << std::endl;
@@ -53,8 +47,7 @@ std::ostream& operator <<( std::ostream& out, const SecureCharBuffer& data )
 
 std::ostream& operator <<( std::ostream& out, const CharBuffer& data ) 
 {
-	for (const char& c : data) 
-	{
+	for (const char& c : data) {
 		out << c;
 	}
 	out << std::endl;
@@ -62,39 +55,42 @@ std::ostream& operator <<( std::ostream& out, const CharBuffer& data )
 }
 
 
-void zero(CharBuffer& data)
-{
+/* -------------------------------------------------- */
+// zeroing methods()
+/* -------------------------------------------------- */
+// calls sodium inbuild memzero() to ensure data clearing
+void zero(CharBuffer& data) {
 	sodium_memzero(data.data(), data.size());
 }
 
-void zero(SecureCharBuffer& data)
-{
+void zero(SecureCharBuffer& data) {
 	sodium_memzero(data.data(), data.size());
 }
-void zero(SecureString& data)
-{
+void zero(SecureString& data) {
 	sodium_memzero(data.data(), data.size());
 }
 
 
-CharBuffer toLower(CharBuffer data) 
-{
-	for (auto& e : data) 
-	{
+/* -------------------------------------------------- */
+// helper functions
+/* -------------------------------------------------- */
+CharBuffer toLower(CharBuffer data) {
+	for (auto& e : data) {
 		e = tolower(e);
 	}
 	return data;
 }
 
-void printHex(const CharBuffer data) 
-{
-	for (unsigned char c : data)
+void printHex(const CharBuffer data) {
+	for (unsigned char c : data) {
 		printf("%02x", c);
+	}
 	puts("");
 }
 void printHex(const SecureCharBuffer data) 
 {
-	for (unsigned char c : data)
+	for (unsigned char c : data) {
 		printf("%02x", c);
+	}
 	puts("");
 }

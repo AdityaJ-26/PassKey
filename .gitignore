@@ -4,7 +4,7 @@
 /core/build
 /bin/
 .vs/
-/data/*
+data/*
 
 *.filters
 *.exe

@@ -1,5 +1,17 @@
 /*
-* minimal implementation of a custom allocator
+* minimal implementation of a custom allocator for sensitive data
+* uses sodium_malloc() to allocated secure memory with overwriting and overflow corruption protection
+* 'UNDERLYING STRUCTURE' : sodium_malloc() uses sodium_memlock() automatically for the allocated memory, hence allocating safe memory
+*/
+
+/* MEMORY STRUCTURE
+* structure for memory allocated using sodium_malloc(size); 
+	[guard page]
+	[canary]
+	[allocated buffer]  -- data storing
+	[guard page]
+* guard page are inaccessible locked memory blocks, if memory overflow tries to write into guard page, program crashes from SEGFAULT/SIGSEGV.
+* canary is memory block with knwown value, if overflow updates the canary value, it is checked during sodium_free() and any corruption is detected.
 */
 
 #ifndef ALLOC_H
@@ -11,7 +23,6 @@
 
 #include "sodium.h"
 
-//custom allocator class for secure memory allocation of decrypted / sensitive credentials
 template <typename T>
 class SecureAllocator {
 	public:
@@ -36,9 +47,7 @@ class SecureAllocator {
 		template <typename U>
 		SecureAllocator(const SecureAllocator<U>&) noexcept {}
 
-		// allocation function
 		// returns secure allocated memory block
-		// debugging not allowed with secured memory, instruction defined internally to stop execution
 		pointer allocate(size_type numObjects) {					// mandatory
 			pointer ptr = static_cast<pointer>(sodium_malloc(numObjects * sizeof(T)));
 			if (ptr == nullptr) {
@@ -53,8 +62,6 @@ class SecureAllocator {
 			allocate(numObjects);
 		}
 
-		// deallocation function
-		// zeroes data pointed 
 		void deallocate(pointer ptr, size_type numObjects) {		// mandatory
 			if (ptr) {
 				sodium_memzero(reinterpret_cast<void*>(ptr), numObjects);

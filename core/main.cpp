@@ -1,11 +1,26 @@
 /*
-* -------------------------- PASSKEY ----------------------------
-* Secure, Offline, Hardware Key based Password Manager
-* ---------------------------------------------------------------
+* ------------------------- PASSKEY -------------------------
+*	 Secure, Offline, Hardware Key based Password Manager
+* -----------------------------------------------------------
+*/
 
-* additional external libraries - libsodium v1.0.21 stable-msvc
-* uses secure memory allocation for security purpose [see alloc.h for custom allocator]
-* secure memory allocators can interfere with debugging features [mostly works fine, problematic while viewing secure allocated data]
+/* ----- Compiler -----
+* Language : C++
+* CXX-STANDARD : C++20
+* Compiler : g++
+* Compiler Version : 15.2.0 
+*/
+
+/* ----- Libraries -----
+* Library Name : libsodium
+* Library Version : v1.0.21-stable
+*/
+
+/* ----- Features -----
+* key storage in external USB device, and USB device is required to access vault
+* uses secure memory allocation for data protection [see alloc.h for custom allocator]
+* stores data encrypted locally in binary (.bin) files
+* creadentials are loaded into memory only when requested, increasing security
 */
 
 #include <iostream>
@@ -22,14 +37,12 @@ int main(void)
 		app = new System();
 		init();
 
-
 		app->loadUser();
 		if (!app->unlockKey())
 		{
 			exit(0);
 		}
 
-		app->loadMetadata();
 		char choice;
 		while (true) 
 		{
@@ -43,13 +56,13 @@ int main(void)
 			switch (choice)
 			{
 				case '1':
-					app->newEntry();
+					app->addEntry();
 					break;
 				case '2':
-					app->displayMetaList();
+					app->displayMetadataList();
 					break;
 				case '3':
-					app->displayEntry();
+					app->searchEntry();
 					break;
 				case '4':
 					std::cout << "Exiting\n";

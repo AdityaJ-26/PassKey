@@ -4,30 +4,29 @@
 #include "files.h"
 #include "user.h"
 
-class System 
-{
+class System {
 	private:
 		FileHandles* sys_files;
 		User* user;
 		SecureCharBuffer vault_key;
-		std::vector<CharBuffer> meta_list;
+		std::vector<CharBuffer> metadata_list;
 
 	private:
 		int insert(CharBuffer&);
 		int find(const CharBuffer&) const;
-		void createKey();
+		void createVaultKey();
+		void loadMetadata();
 
 	public:
 		System();
 		~System();
 
-		void loadUser();
 		void createNewUser();
-		void loadMetadata();
+		void loadUser();
 		bool unlockKey();
-		void newEntry();
-		void displayEntry();
-		void displayMetaList() const;
+		void addEntry();
+		void searchEntry();
+		void displayMetadataList() const;
 		void exit();
 };
 

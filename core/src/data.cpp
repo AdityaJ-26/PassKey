@@ -16,14 +16,16 @@ Data::Data() :
 	username_nonce()
 { }
 
+// constructor with plain username & password with vault_key, stored after encryption
 Data::Data(
 	const SecureCharBuffer& username, 
 	const SecureCharBuffer& password, 
-	const SecureCharBuffer& vault_key)
+	const SecureCharBuffer& vault_key) 
 { 
 	encrypt(username, password, vault_key);
 }
 
+// constructor to store credentials read from file, encrypted form
 Data::Data(
 	const SecureCharBuffer& pass,
 	const CharBuffer& pass_nonce,
@@ -33,12 +35,8 @@ Data::Data(
 	encrypt_username(user), username_nonce(user_nonce)
 { }
 
-/*
-* zeroes the memory of data members
-* using sodium_memzero, CharBuffer do not zeroes memory by default
-*/
-Data::~Data() 
-{
+// using sodium_memzero, CharBuffer do not zeroes memory by default
+Data::~Data() {
 	sodium_memzero(reinterpret_cast<void*>(encrypt_password.data()), encrypt_password.size());
 	sodium_memzero(reinterpret_cast<void*>(encrypt_username.data()), encrypt_username.size());
 	sodium_memzero(reinterpret_cast<void*>(password_nonce.data()), password_nonce.size());
@@ -47,14 +45,14 @@ Data::~Data()
 
 
 /* -------------------------------------------------- */
-// encrypt method()
+// data encryption method()
 /* -------------------------------------------------- */
-
-/*
-* encrypts credentials
+/* UNDERLYING SYSTEM
+* crypto_secretbox_easy() is used that uses XSalsa20-Poly1305 authenticated encryption construction.
+* XSalsa20 is used to encrypt data using 265 bit key and 192 bit nonce.
+* Poly1305 associates a 16 byte MAC with ciphertext (MAC_BYTES), and uses AEAD for authentication.
 */
-void Data::encrypt(const SecureCharBuffer& user, const SecureCharBuffer& pass, const SecureCharBuffer& key)
-{
+void Data::encrypt(const SecureCharBuffer& user, const SecureCharBuffer& pass, const SecureCharBuffer& key) {
 	encrypt_password.resize(pass.size() + crypto_secretbox_MACBYTES);
 	encrypt_username.resize(user.size() + crypto_secretbox_MACBYTES);
 	username_nonce = generateNonce();
@@ -85,8 +83,7 @@ void Data::encrypt(const SecureCharBuffer& user, const SecureCharBuffer& pass, c
 /* -------------------------------------------------- */
 // decrypt data method
 /* -------------------------------------------------- */
-void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureCharBuffer& key) const
-{
+void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureCharBuffer& key) const {
 	pass.resize(encrypt_password.size() - crypto_secretbox_MACBYTES);
 	user.resize(encrypt_username.size() - crypto_secretbox_MACBYTES);
 
@@ -113,18 +110,15 @@ void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureC
 
 
 /* -------------------------------------------------- */
-// public functions
+// public helper for accessing data
 /* -------------------------------------------------- */
-
-void Data::getEncryptedData(SecureCharBuffer& enc_pass, CharBuffer& pass_nonce, SecureCharBuffer& enc_user, CharBuffer& user_nonce) const 
-{
+void Data::getEncryptedData(SecureCharBuffer& enc_pass, CharBuffer& pass_nonce, SecureCharBuffer& enc_user, CharBuffer& user_nonce) const {
 	enc_pass = encrypt_password;
 	enc_user = encrypt_username;
 	pass_nonce = password_nonce;
 	user_nonce = username_nonce;
 }
 
-void Data::getData(SecureCharBuffer& enc_pass, SecureCharBuffer& enc_user, const SecureCharBuffer& key) const
-{
+void Data::getData(SecureCharBuffer& enc_pass, SecureCharBuffer& enc_user, const SecureCharBuffer& key) const {
 	decrypt(enc_pass, enc_user, key);
 }

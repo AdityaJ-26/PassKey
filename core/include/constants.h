@@ -17,17 +17,16 @@ using CharBuffer = std::vector<unsigned char>;
 /* -------------------------------------------------- */  
 
 /* 
-* 8 bytes * 4 - uint64_t length variable 
 * 24 bytes * 2 - nonce size 
-* 88 bytes - 72 bytes username  + 16 macbytes
-* 88 bytes - 72 bytes password + 16 macbytes
+* 8 bytes * 2 - nonce.size() variable
+* 8 bytes * 2 - uint64_t username.size() & password.size()
+* 160 bytes - username, password, padding
 */
 constexpr uint64_t DATA_BUFFER_SIZE = 256;
 
 /*
 * 8 bytes - uint64_t data_index
-* 8 bytes - metadata size
-* 48 bytes - metadata
+* 48 bytes - metadata, metadata.size(), padding
 */
 constexpr uint64_t META_BUFFER_SIZE = 64;
 
