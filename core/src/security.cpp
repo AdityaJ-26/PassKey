@@ -96,15 +96,15 @@ bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, 
 	return true;
 }
 
+
 /* -------------------------------------------------- */
 // vault_key unlock function
 /* -------------------------------------------------- */
 /*
 * unlocks the encrypted_vault_key using password_derived_key and returns success return code (boolean)
 */
-bool unlockVaultKey(SecureCharBuffer& encrypted_key, SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
+bool unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
 	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
-	zero(password);
 	zero(salt);
 
 	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);

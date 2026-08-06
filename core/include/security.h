@@ -14,7 +14,7 @@ SecureCharBuffer generateVaultKey(const SecureString&, const CharBuffer&, const 
 
 // key decryption verification function
 bool decryptVaultKey(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
-bool unlockVaultKey(SecureCharBuffer&, SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
+bool unlockVaultKey(SecureCharBuffer&, const SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
 
 
 

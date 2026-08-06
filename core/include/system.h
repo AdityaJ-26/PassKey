@@ -12,20 +12,20 @@ class System {
 		std::vector<CharBuffer> metadata_list;
 
 	private:
-		int insert(CharBuffer&);
+		int insert(const CharBuffer&);
 		int find(const CharBuffer&) const;
-		void createVaultKey();
 		void loadMetadata();
 
 	public:
 		System();
 		~System();
 
-		void createNewUser();
-		void loadUser();
-		bool unlockKey();
-		void addEntry();
-		void searchEntry();
+		void createVaultKey(const SecureString&);
+		void createNewUser(const std::string&, const std::string&);
+		bool loadUser();
+		bool unlockKey(const SecureString&);
+		void addEntry(const CharBuffer&, const SecureCharBuffer&, const SecureCharBuffer&);
+		bool searchEntry(const CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
 		void displayMetadataList() const;
 		void exit();
 };

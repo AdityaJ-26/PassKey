@@ -4,6 +4,7 @@
 
 FileHandles::FileHandles() = default;
 
+
 FileHandles::~FileHandles() {
 	user.flush();
 	user.close();
@@ -15,6 +16,7 @@ FileHandles::~FileHandles() {
 	meta.close();
 }
 
+
 bool FileHandles::verifyDirectory(const std::string& path) const {
 	std::filesystem::path tempPath = path;
 	if (std::filesystem::exists(tempPath.parent_path())) {
@@ -25,9 +27,11 @@ bool FileHandles::verifyDirectory(const std::string& path) const {
 	}
 }
 
+
 /* -------------------------------------------------- */
 // read and write functions
 /* -------------------------------------------------- */
+
 // write functions writes CharBuffer and SecureCharBuffer in binary files as [ buffer.size() ][ buffer ]
 template <typename T>
 void FileHandles::write(std::fstream& file, const T& msg) {
@@ -69,9 +73,11 @@ T FileHandles::read(std::fstream& file) {
 }
 
 
+
 /* -------------------------------------------------- */
 // key functions
 /* -------------------------------------------------- */
+
 void FileHandles::createKeyFile(const std::string& path) {
 	this->key_path = path;
 	if (!std::filesystem::exists(key_path.parent_path())) {
@@ -81,6 +87,7 @@ void FileHandles::createKeyFile(const std::string& path) {
 	key_file.open(key_path, std::ios::binary | std::ios::out);
 	key_file.close();
 }
+
 
 // opens key file and if key_path not loaded, loads user and if user not load
 void FileHandles::openKeyFile(std::fstream& key_file) {
@@ -102,6 +109,7 @@ void FileHandles::openKeyFile(std::fstream& key_file) {
 	}
 }
 
+
 /*
 * stores the salt used to derive key from password, nonce for master key decryption, and encryption_key
 * order size(salt) -> salt ->
@@ -120,6 +128,7 @@ void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer
 	key_file.close();
 }
 
+
 void FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
 	std::fstream key_file;
 	key_file.open(key_path, std::ios::binary | std::ios::in);
@@ -135,18 +144,16 @@ void FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, C
 }
 
 
+
 /* -------------------------------------------------- */
 // user functions
 /* -------------------------------------------------- */
+
 // opens (creates if not found) vault and metadata file
 void FileHandles::initFiles() {
 	if (!std::filesystem::exists(vault_path.parent_path())) {
 		std::filesystem::create_directories(vault_path.parent_path());
 	}
-	if (!std::filesystem::exists(meta_path.parent_path())) {
-		std::filesystem::create_directories(meta_path.parent_path());
-	}
-
 	vault.open(vault_path, std::ios::binary | std::ios::in | std::ios::app);
 	if (vault.is_open()) {
 		vault.open(vault_path, std::ios::binary | std::ios::out);
@@ -154,6 +161,9 @@ void FileHandles::initFiles() {
 		vault.open(vault_path, std::ios::binary | std::ios::in | std::ios::out);
 	}
 
+	if (!std::filesystem::exists(meta_path.parent_path())) {
+		std::filesystem::create_directories(meta_path.parent_path());
+	}
 	meta.open(meta_path, std::ios::binary | std::ios::in);
 	if (meta.is_open()) {
 		meta.open(meta_path, std::ios::binary | std::ios::out);
@@ -161,6 +171,7 @@ void FileHandles::initFiles() {
 		meta.open(meta_path, std::ios::binary | std::ios::in);
 	}
 }
+
 
 void FileHandles::generateUserFile() {
 	if (!std::filesystem::exists(user_settings.parent_path())) {
@@ -174,6 +185,7 @@ void FileHandles::generateUserFile() {
 		throw Error{ "_file_error : error creating user_file" };
 	}
 }
+
 
 /*
 * store user_name and vault_key path in user.bin
@@ -193,6 +205,7 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 	write(user, field);
 	write(user, hardwareKeyPath);
 }
+
 
 bool FileHandles::loadUserSettings(std::string& name) {
 	if (!std::filesystem::exists(user_settings)) {
@@ -224,9 +237,11 @@ bool FileHandles::loadUserSettings(std::string& name) {
 }
 
 
+
 /* -------------------------------------------------- */
 // storing and reading credentials
 /* -------------------------------------------------- */
+
 /*
 * stores the metadata in sorted order maintained by System::metadata_list, along with corresponding credentials offset in vault.bin
 * order [ credential_offset ] [ metadata.size() ] [ metadata ] [ padding ]
@@ -252,9 +267,9 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, uint64_t data_index,
 		if (offset_count == offset) {
 			temp_file.write(reinterpret_cast<const char*>(&data_index), sizeof(data_index));
 			write(temp_file, metadata);
-			CharBuffer padding(META_BUFFER_SIZE - (sizeof(data_index) + sizeof(uint64_t) + metadata.size());
+			CharBuffer padding(META_BUFFER_SIZE - (sizeof(data_index) + sizeof(uint64_t) + metadata.size()));
 			randombytes(padding.data(), padding.size());
-			write(temp_file, padding);
+			temp_file.write(reinterpret_cast<const char*>(padding.data()), padding.size());
 		}
 
 		if (!meta.read(reinterpret_cast<char*>(buffer), META_BUFFER_SIZE)) {
@@ -268,9 +283,9 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, uint64_t data_index,
 	if (offset_count < offset) {
 		temp_file.write(reinterpret_cast<const char*>(&data_index), sizeof(data_index));
 		write(temp_file, metadata);
-		CharBuffer padding(META_BUFFER_SIZE - (sizeof(data_index) + sizeof(uint64_t) + metadata.size());
+		CharBuffer padding(META_BUFFER_SIZE - (sizeof(data_index) + sizeof(uint64_t) + metadata.size()));
 		randombytes(padding.data(), padding.size());
-		write(temp_file, padding);
+		temp_file.write(reinterpret_cast<const char*>(padding.data()), padding.size());
 	}
 
 	temp_file.close();
@@ -279,9 +294,11 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, uint64_t data_index,
 	std::filesystem::path new_path = meta_path.parent_path() / "temp.bin";
 	std::filesystem::remove(meta_path);
 	std::filesystem::rename(new_path, meta_path);
+
 	meta.open(meta_path, std::ios::binary | std::ios::in);
 	delete buffer;
 }
+
 
 /*
 * using meta.clear() as meta is getting to EOF while loading metadata into meta_list, this sets the eofbit and if the last read operation fails,
@@ -295,6 +312,7 @@ uint64_t FileHandles::getOffset(int offset) {
 	return data_offset;
 }
 
+
 uint64_t FileHandles::readMetadata(CharBuffer& metadata, int offset) {
 	uint64_t data_offset{ 1 };
 	meta.seekg(offset * META_BUFFER_SIZE, std::ios::beg);
@@ -306,6 +324,7 @@ uint64_t FileHandles::readMetadata(CharBuffer& metadata, int offset) {
 	return data_offset;
 }
 
+
 /*
 * vault file storing
 * order
@@ -313,6 +332,7 @@ uint64_t FileHandles::readMetadata(CharBuffer& metadata, int offset) {
 	len(pass_nonce) -> pass_nonce ->
 	len(user) -> user ->
 	len(user_nonce) -> user_nonce
+	padding
 */
 uint64_t FileHandles::storeCredentials(
 	const SecureCharBuffer& enc_pass, const CharBuffer& pass_nonce,
