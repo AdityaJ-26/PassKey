@@ -3,7 +3,6 @@
 
 #include "constants.h"
 
-void init();
 void input( CharBuffer& );
 void input( SecureCharBuffer& );
 

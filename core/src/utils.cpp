@@ -5,15 +5,6 @@
 #include "error.h"
 #include "utils.h"
 
-/* -------------------------------------------------- */
-// sodium init functions wrapper
-/* -------------------------------------------------- */
-void init() {
-	if (sodium_init() < 0) {
-		throw Error{ "_lib_error : error initialising libsodium" };
-	}
-}
-
 
 /* -------------------------------------------------- */
 // CharBuffer / SecureCharBuffer input methods

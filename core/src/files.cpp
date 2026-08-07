@@ -129,18 +129,25 @@ void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer
 }
 
 
-void FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
+bool FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
+	bool success = true;
+
 	std::fstream key_file;
 	key_file.open(key_path, std::ios::binary | std::ios::in);
+
+	if (!key_file.is_open()) {
+		return false;
+	}
 
 	if (!(read(key_file, salt) &&
 		read(key_file, nonce) &&
 		read(key_file, enc_key)
 		))
 	{
-		throw Error{ "_file_error : corrupted key file" };
+		success = false;
 	}
 	key_file.close();
+	return success;
 }
 
 

@@ -21,13 +21,13 @@ class System {
 		~System();
 
 		void createVaultKey(const SecureString&);
-		void createNewUser(const std::string&, const std::string&);
+		int createNewUser(const std::string&, const std::string&);
 		bool loadUser();
-		bool unlockKey(const SecureString&);
+		int unlockKey(const SecureString&);
 		void addEntry(const CharBuffer&, const SecureCharBuffer&, const SecureCharBuffer&);
 		bool searchEntry(const CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
 		void displayMetadataList() const;
-		void exit();
+		void clear();
 };
 
 # endif // ! SYSTEM_H

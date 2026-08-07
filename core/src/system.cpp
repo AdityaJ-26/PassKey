@@ -103,35 +103,15 @@ void System::loadMetadata() {
 /* -------------------------------------------------- */
 // user operations
 /* -------------------------------------------------- */
-void System::createNewUser(const std::string& name, const std::string& hardware_path) {
+int System::createNewUser(const std::string& name, const std::string& hardware_path) {
 	sys_files->generateUserFile();
 
 	if (!sys_files->verifyDirectory(hardware_path)) {
-		std::cout << "Entered Hardware Path cannot be found.. \n";
-		std::cout << "Connect the hardware key and try again\n";
-
-		int choice;
-		while (true) {
-			std::cout << "1. Exit\n";
-			std::cout << "2. Retry Connection\n";
-			std::cout << "Enter Choice : ";
-			std::cin.ignore();
-			std::cin >> choice;
-
-			if (choice == 1) {
-				::exit(0);
-			}
-			else if (choice == 2 && sys_files->verifyDirectory(hardware_path)) {
-				break;
-			}
-			else {
-				std::cout << "Hardware Key not detected, try again\n";
-			}
-		}
+		return -1;
 	}
 	sys_files->storeUserData(hardware_path, name);
-	std::cout << "New User Created\n";
 	sys_files->createKeyFile(hardware_path);
+	return 0;
 }
 
 
@@ -139,10 +119,6 @@ bool System::loadUser() {
 	sys_files->initFiles();
 
 	if (sys_files->loadUserSettings(user->nameRef())) {
-		std::cout << "Welcome " << user->getName() << std::endl;
-		std::cout << "Press Enter to Continue..";
-		char c = std::getchar();
-	
 		loadMetadata();
 		return true;
 	}
@@ -155,25 +131,26 @@ bool System::loadUser() {
 /*
 * loads key_data from key.bin [vault_key_file] and decrypts it with provided password and loads the decrypted key into System::vault_key
 */
-bool System::unlockKey(const SecureString& password) { 
+int System::unlockKey(const SecureString& password) { 
 	CharBuffer nonce;
 	CharBuffer salt;
 	SecureCharBuffer enc_key;
 
-	sys_files->retrieveKeyData(enc_key, salt, nonce);
+	int exit_code = 0;
 
-	bool unlocked = false;
-	if (unlockVaultKey(enc_key, password, salt, nonce, vault_key)) {
-		unlocked = true;
-		std::cout << "Correct Password\n";
+	if (!sys_files->retrieveKeyData(enc_key, salt, nonce)) {
+		exit_code = -1;
+	}
+	else if (!unlockVaultKey(enc_key, password, salt, nonce, vault_key)) {
+		exit_code = 1;
 	}
 	else {
-		std::cout << "Incorrect Password, try again\n";
+		exit_code = 0;
 	}
 
 	zero(nonce);
 	zero(salt);
-	return unlocked;
+	return exit_code;
 }
 
 
@@ -218,11 +195,12 @@ bool System::searchEntry(const CharBuffer& metadata, SecureCharBuffer& username,
 
 void System::displayMetadataList() const {
 	for (const auto& meta : metadata_list) {
-		std::cout << meta << std::endl;
+		std::cout << "-> " << meta;
 	}
 }
 
 
-void System::exit() {
-	delete this;
+void System::clear() {
+	vault_key.clear();
+	metadata_list.clear();
 }
