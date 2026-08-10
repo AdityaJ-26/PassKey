@@ -20,6 +20,7 @@ class System {
 		System();
 		~System();
 
+		const std::string& name() const;
 		void createVaultKey(const SecureString&);
 		int createNewUser(const std::string&, const std::string&);
 		bool loadUser();

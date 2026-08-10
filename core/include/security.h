@@ -7,9 +7,9 @@
 CharBuffer generateNonce();
 inline SecureCharBuffer keygen();
 
-// key generation/creation
 SecureCharBuffer derivePasswordKey(const SecureString&, const CharBuffer&);
 
+// key generation/creation
 SecureCharBuffer generateVaultKey(const SecureString&, const CharBuffer&, const CharBuffer&);
 
 // key decryption verification function

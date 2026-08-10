@@ -21,6 +21,10 @@ System::~System() {
 	delete user;
 }
 
+const std::string& System::name() const {
+	return user->nameRef();
+}
+
 /*
 * creates and stores vault_key
 * the key is stored in encrypted form in hardware device

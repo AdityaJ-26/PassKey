@@ -78,6 +78,8 @@ SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer
 /* -------------------------------------------------- */
 bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key)  {
 	SecureCharBuffer encryption_key(enc_key.size() - crypto_secretbox_MACBYTES);
+	bool decrypted = true
+		;
 	if (crypto_secretbox_open_easy(
 		encryption_key.data(),
 		enc_key.data(),
@@ -85,15 +87,12 @@ bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, 
 		nonce.data(),
 		password_derived_key.data()) != 0)
 	{
-		zero(enc_key);
-		zero(password_derived_key);
-		zero(nonce);
-		return false;
+		decrypted = false;
 	}
 	zero(enc_key);
 	zero(nonce);
 	zero(enc_key);
-	return true;
+	return decrypted;
 }
 
 

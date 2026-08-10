@@ -10,7 +10,6 @@ class User {
 	public:
 		User();
 		std::string& nameRef();
-		const std::string& getName() const;
 };
 
 #endif // ! PASS_H

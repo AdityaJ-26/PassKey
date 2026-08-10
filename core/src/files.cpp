@@ -18,8 +18,15 @@ FileHandles::~FileHandles() {
 
 
 bool FileHandles::verifyDirectory(const std::string& path) const {
-	std::filesystem::path tempPath = path;
-	if (std::filesystem::exists(tempPath.parent_path())) {
+	std::filesystem::path file_path = path;
+	file_path = file_path.parent_path();
+
+	// current directory
+	if (file_path.empty()) {
+		return true;
+	}
+
+	if (std::filesystem::exists(file_path) && is_directory(file_path)) {
 		return true;
 	}
 	else {
@@ -80,7 +87,7 @@ T FileHandles::read(std::fstream& file) {
 
 void FileHandles::createKeyFile(const std::string& path) {
 	this->key_path = path;
-	if (!std::filesystem::exists(key_path.parent_path())) {
+	if (!std::filesystem::exists(key_path.parent_path()) && is_directory(key_path.parent_path())	) {
 		std::filesystem::create_directories(key_path.parent_path());
 	}
 	std::fstream key_file;
@@ -112,17 +119,19 @@ void FileHandles::openKeyFile(std::fstream& key_file) {
 
 /*
 * stores the salt used to derive key from password, nonce for master key decryption, and encryption_key
-* order size(salt) -> salt ->
-	    size(nonce) -> nonce ->
-	    size(enc_key) -> key
+* order 
+	size(enc_key) -> key ->
+	size(salt) -> salt ->
+	size(nonce) -> nonce
+	    
 */
 void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer& salt, const CharBuffer& nonce) {
 	std::fstream key_file;
 	openKeyFile(key_file);
 
+	write(key_file, enc_key);
 	write(key_file, salt);
 	write(key_file, nonce);
-	write(key_file, enc_key);
 
 	key_file.flush();
 	key_file.close();
@@ -139,9 +148,9 @@ bool FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, C
 		return false;
 	}
 
-	if (!(read(key_file, salt) &&
-		read(key_file, nonce) &&
-		read(key_file, enc_key)
+	if (!(read(key_file, enc_key) &&
+		read(key_file, salt) &&
+		read(key_file, nonce)
 		))
 	{
 		success = false;

@@ -28,6 +28,7 @@ void CLI::processInput(const std::string& command) {
 
 		int status = system->unlockKey(password);
 		zero(password);
+
 		if (system->unlockKey(password) == -1) {
 			std::cout << "No user found...\n"
 				      << "Create New User...\n";
@@ -37,8 +38,9 @@ void CLI::processInput(const std::string& command) {
 					  << "Try Again..\n";
 		}
 		else {
-			std::cout << "Correct Password\n"
-					  << "Unlocked Vault\n";
+			std::cout << "Correct Password...\n"
+					  << "Unlocked Vault...\n";
+			std::cout << "Welcome " << system->name() << "\n";
 			loggedIn = true;
 		}
 	}
@@ -56,7 +58,8 @@ void CLI::processInput(const std::string& command) {
 		std::string hardware_path;
 
 		std::cout << "Enter Name : ";
-		std::cin >> name;
+		std::cin.ignore();
+		std::getline(std::cin, name, '\n');
 		std::cout << "Enter Hardware Path : ";
 		std::cin >> hardware_path;
 		if (system->createNewUser(name, hardware_path) != 0) {

@@ -163,7 +163,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="src\cli.cpp" />
     <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\files.cpp" />
@@ -171,6 +170,7 @@
     <ClCompile Include="src\system.cpp" />
     <ClCompile Include="src\user.cpp" />
     <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\alloc.h" />
