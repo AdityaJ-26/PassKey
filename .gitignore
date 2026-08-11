@@ -1,10 +1,8 @@
-/extern/
-/core/bin
-/core/debug
-/core/build
+/third_party/
 /bin/
 .vs/
-data/*
+.vscode/
+/build/
 
 *.filters
 *.exe
@@ -14,4 +12,5 @@ data/*
 *.VC.db
 *.VC.opendb
 *.user
+
 idea.md
