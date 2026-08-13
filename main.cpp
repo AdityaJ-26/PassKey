@@ -42,6 +42,7 @@ int main(void)
 	try {
 		init();
 		
+		std::cout << "\033[2J\033[H";
 		app->printCLI();
 		app->printSoftwareInfo();
 		std::cout << "Press Enter to Continue...";
