@@ -11,12 +11,12 @@ project(PassKey)
 # ------------------------
 add_library(libsodium SHARED IMPORTED)
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (LINUX)
 	set_target_properties(libsodium PROPERTIES
 		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/libsodium.so"
 		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
 	)
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+elseif (WIN32)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		set_target_properties(libsodium PROPERTIES
 			IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.dll"
@@ -53,3 +53,13 @@ target_sources(passkey
 		FILES
 			cli/src/cli.h
 )
+
+if (WIN32)
+	add_custom_command(TARGET passkey POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.dll>"
+            "$<$<NOT:$<CONFIG:Debug>>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/release/libsodium.dll>"
+            "$<TARGET_FILE_DIR:passkey>"
+        COMMENT "Copying libsodium.dll to executable directory"
+    )
+endif()
