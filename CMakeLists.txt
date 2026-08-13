@@ -1,6 +1,8 @@
 # root CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.31)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(PassKey)
 
@@ -9,10 +11,26 @@ project(PassKey)
 # ------------------------
 add_library(libsodium SHARED IMPORTED)
 
-set_target_properties(libsodium PROPERTIES
-	IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/libsodium.so.26.3.0"
-	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
-)
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	set_target_properties(libsodium PROPERTIES
+		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/libsodium.so"
+		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
+	)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set_target_properties(libsodium PROPERTIES
+			IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.dll"
+			IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.lib"
+			INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
+			)
+	else()
+		set_target_properties(libsodium PROPERTIES
+			IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/release/libsodium.dll"
+			IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/release/libsodium.lib"
+			INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
+		)
+	endif()
+endif()
 
 add_subdirectory(core)
 
