@@ -19,6 +19,8 @@ System::~System() {
 	delete sys_files;
 	metadata_list.clear();
 	delete user;
+	user = nullptr;
+	sys_files = nullptr;
 }
 
 const std::string& System::name() const {

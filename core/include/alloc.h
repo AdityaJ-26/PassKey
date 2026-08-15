@@ -1,12 +1,13 @@
 /*
 * minimal implementation of a custom allocator for sensitive data
-* uses sodium_malloc() to allocated secure memory with overwriting and overflow corruption protection
-* 'UNDERLYING STRUCTURE' : sodium_malloc() uses sodium_memlock() automatically for the allocated memory, hence allocating safe memory
+* uses sodium_allocarray() to allocated secure memory with overwriting and overflow corruption protection, uses sodium_mlock() to lock allocated memory0
+* sodium_allocarray(count) also protect against arithmetic overflow error when count * size > INT_MAX
 */
 
 /* MEMORY STRUCTURE
+* the allocated memory is initialised with 0xdb
 * structure for memory allocated using sodium_malloc(size); 
-	[guard page]
+	[optional guard page]
 	[canary]
 	[allocated buffer]  -- data storing
 	[guard page]
@@ -49,7 +50,7 @@ class SecureAllocator {
 
 		// returns secure allocated memory block
 		pointer allocate(size_type numObjects) {					// mandatory
-			pointer ptr = static_cast<pointer>(sodium_malloc(numObjects * sizeof(T)));
+			pointer ptr = static_cast<pointer>(sodium_allocarray(numObjects, sizeof(T)));
 			if (ptr == nullptr) {
 				throw std::bad_alloc();
 			}
@@ -59,19 +60,17 @@ class SecureAllocator {
 		// allocator for nearby/close memory allocation
 		// used for faster cache perfomance
 		pointer allocate(size_type numObjects, pointer hint) {
-			allocate(numObjects);
+			return allocate(numObjects);
 		}
 
+		// sodium_free deallocates memory but before that verifies canary for any buffer overflow and terminates process if required
 		void deallocate(pointer ptr, size_type numObjects) {		// mandatory
-			if (ptr) {
-				sodium_memzero(reinterpret_cast<void*>(ptr), numObjects);
-			}
-				sodium_free(ptr);
+			sodium_free(ptr);
 		}
 
 		// optional function to get max size that can be allocated
 		size_type max_size() const {
-			return std::numeric_limits<size_type>::max();
+			return std::numeric_limits<size_type>::max() / sizeof(T);
 		}
 
 		// equality operator, for allocator comparison, to specify move or swap operation

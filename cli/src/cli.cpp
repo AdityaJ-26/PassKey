@@ -117,6 +117,7 @@ void CLI::processInput(const std::string& command) {
 			std::cout << "Username : " << username
 					  << "Password : " << password;
 		}
+		zero(metadata);
 	}
 }
 

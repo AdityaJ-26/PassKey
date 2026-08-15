@@ -6,7 +6,6 @@
 class CLI {
 	private:
 		System* system;
-		std::string msg;
 		bool loggedIn;
 
 	public:

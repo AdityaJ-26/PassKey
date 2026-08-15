@@ -29,14 +29,13 @@
 #include "error.h"
 #include "cli.h"
 
-void init() {
+static void init() {
 	if (sodium_init() < 0) {
 		throw Error{ "_lib_error : error initialising libsodium" };
 	}
 }
 
-int main(void) 
-{
+int main(void) {
 	CLI* app;
 	app = new CLI();
 	try {
@@ -72,7 +71,8 @@ int main(void)
 		std::cout << "unexpected error" << std::endl;
 	}
 	delete app;
-	std::cout << "Press Enter to Continue..." << std::endl;
+	app = nullptr;
+	std::cout << "Press Enter to Continue...";
 	std::cin.ignore();
 	char c = getchar();
 	return 0;

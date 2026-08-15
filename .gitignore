@@ -3,6 +3,7 @@ bin/
 .vs/
 .vscode/
 /build/
+data/
 
 *.filters
 *.exe
