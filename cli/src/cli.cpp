@@ -6,9 +6,8 @@
 #include "constants.h"
 
 CLI::CLI() : running(true), system(new System()), loggedIn(false)
-{
-	system->loadUser();
-}
+{}
+
 CLI::~CLI() {
 	delete system;
 	system = nullptr;
@@ -22,18 +21,22 @@ void CLI::processInput(const std::string& command) {
 		printHelpMenu();
 	}
 	else if (command == "login") {
+		int status = system->loadUser();
+
+		if (status == 0) {
+			std::cout << "No user found...\n"
+				      << "Create New User...\n";
+			return;
+		}
+
 		SecureString password;
 		std::cout << "Enter Master Password : ";
 		std::cin >> password;
 
-		int status = system->unlockKey(password);
+		status = system->unlockKey(password);
 		zero(password);
 
-		if (system->unlockKey(password) == -1) {
-			std::cout << "No user found...\n"
-				      << "Create New User...\n";
-		}
-		else if (status == 1) {
+		if (status == 1) {
 			std::cout << "Wrong Password...\n"
 					  << "Try Again..\n";
 		}
@@ -41,6 +44,7 @@ void CLI::processInput(const std::string& command) {
 			std::cout << "Correct Password...\n"
 					  << "Unlocked Vault...\n";
 			std::cout << "Welcome " << system->name() << "\n";
+			system->loadMetadata();
 			loggedIn = true;
 		}
 	}
@@ -62,12 +66,12 @@ void CLI::processInput(const std::string& command) {
 		std::getline(std::cin, name, '\n');
 		std::cout << "Enter Hardware Path : ";
 		std::cin >> hardware_path;
+
 		if (system->createNewUser(name, hardware_path) != 0) {
 			std::cout << "Entered Hardware Path cannot be found...\n"
 					  << "Connect the hardware key and try again...\n";
 		}
 		else {
-
 			SecureString password;
 			std::cout << "Set Master Password : ";
 			std::cin >> password;

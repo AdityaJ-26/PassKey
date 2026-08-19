@@ -125,7 +125,6 @@ bool System::loadUser() {
 	sys_files->initFiles();
 
 	if (sys_files->loadUserSettings(user->nameRef())) {
-		loadMetadata();
 		return true;
 	}
 	else {
@@ -143,11 +142,9 @@ int System::unlockKey(const SecureString& password) {
 	SecureCharBuffer enc_key;
 
 	int exit_code = 0;
+	sys_files->retrieveKeyData(enc_key, salt, nonce);
 
-	if (!sys_files->retrieveKeyData(enc_key, salt, nonce)) {
-		exit_code = -1;
-	}
-	else if (!unlockVaultKey(enc_key, password, salt, nonce, vault_key)) {
+	if (!unlockVaultKey(enc_key, password, salt, nonce, vault_key)) {
 		exit_code = 1;
 	}
 	else {

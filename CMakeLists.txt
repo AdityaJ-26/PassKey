@@ -2,13 +2,11 @@
 
 cmake_minimum_required(VERSION 3.31)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED False)
 
 project(PassKey)
 
-# ------------------------
 # libsodium
-# ------------------------
 add_library(libsodium SHARED IMPORTED)
 
 if (LINUX)
@@ -42,6 +40,8 @@ target_link_libraries(passkey
 		core_lib
 )
 
+
+# TARGET
 target_sources(passkey
 	PRIVATE
 		cli/src/cli.cpp

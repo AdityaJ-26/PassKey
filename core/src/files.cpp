@@ -138,25 +138,14 @@ void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer
 }
 
 
-bool FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
-	bool success = true;
-
+void FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
 	std::fstream key_file;
 	key_file.open(key_path, std::ios::binary | std::ios::in);
 
-	if (!key_file.is_open()) {
-		return false;
-	}
-
-	if (!(read(key_file, enc_key) &&
-		read(key_file, salt) &&
-		read(key_file, nonce)
-		))
-	{
-		success = false;
-	}
+	read(key_file, enc_key);
+	read(key_file, salt);
+	read(key_file, nonce);
 	key_file.close();
-	return success;
 }
 
 
@@ -220,6 +209,7 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 	field = "hardware_path";
 	write(user, field);
 	write(user, hardwareKeyPath);
+	user.flush();
 }
 
 
@@ -231,6 +221,7 @@ bool FileHandles::loadUserSettings(std::string& name) {
 		user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
 	}
 
+	user.seekg(0, std::ios::beg);
 	bool loaded = false;
 	std::string data;
 	while (true) {

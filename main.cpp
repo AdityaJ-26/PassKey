@@ -55,7 +55,6 @@ int main(void) {
 			std::cin >> input;
 			app->processInput(input);
 		}
-		
 	}
 	catch (Error& e) 
 	{

@@ -2,6 +2,8 @@
 
 add_library(core_lib)
 
+target_compile_features(core_lib PRIVATE cxx_std_17)
+
 target_sources(core_lib
 	PRIVATE
 		src/data.cpp
