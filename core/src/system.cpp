@@ -204,6 +204,5 @@ void System::displayMetadataList() const {
 
 
 void System::clear() {
-	vault_key.clear();
 	metadata_list.clear();
 }
