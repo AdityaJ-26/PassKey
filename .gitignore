@@ -3,7 +3,8 @@ bin/
 .vs/
 .vscode/
 /build/
-data/
+/data/
+/dev/
 
 *.filters
 *.exe
@@ -13,5 +14,5 @@ data/
 *.VC.db
 *.VC.opendb
 *.user
+*.bin
 
-idea.md

@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED False)
 
 project(PassKey)
 
-# libsodium
+
+# -----libsodium-----
 add_library(libsodium SHARED IMPORTED)
 
 if (LINUX)
@@ -30,8 +31,10 @@ elseif (WIN32)
 	endif()
 endif()
 
-add_subdirectory(core)
 
+add_subdirectory(core/)
+
+# -----TARGET-----
 add_executable(passkey main.cpp)
 
 target_link_libraries(passkey
@@ -40,8 +43,6 @@ target_link_libraries(passkey
 		core_lib
 )
 
-
-# TARGET
 target_sources(passkey
 	PRIVATE
 		cli/src/cli.cpp
@@ -54,6 +55,7 @@ target_sources(passkey
 			cli/src/cli.h
 )
 
+# -----post build operations-----
 if (WIN32)
 	add_custom_command(TARGET passkey POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
