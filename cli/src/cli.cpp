@@ -23,9 +23,14 @@ void CLI::processInput(const std::string& command) {
 	else if (command == "login") {
 		int status = system->loadUser();
 
-		if (status == 0) {
+		if (status == -1) {
 			std::cout << "No user found...\n"
 				      << "Create New User...\n";
+			return;
+		}
+		else if (status == 1) {
+			std::cout << "Hardware Path cannot be found...\n"
+					  << "Connect the hardware key and try again...\n";
 			return;
 		}
 

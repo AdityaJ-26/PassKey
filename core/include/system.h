@@ -22,7 +22,7 @@ class System {
 		const std::string& name() const;
 		void createVaultKey(const SecureString&);
 		int createNewUser(const std::string&, const std::string&);
-		bool loadUser();
+		int loadUser();
 		void loadMetadata();
 		int unlockKey(const SecureString&);
 		void addEntry(const CharBuffer&, const SecureCharBuffer&, const SecureCharBuffer&);

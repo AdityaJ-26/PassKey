@@ -87,7 +87,7 @@ T FileHandles::read(std::fstream& file) {
 
 void FileHandles::createKeyFile(const std::string& path) {
 	this->key_path = path;
-	if (!std::filesystem::exists(key_path.parent_path()) && is_directory(key_path.parent_path())	) {
+	if (!std::filesystem::exists(key_path.parent_path()) && is_directory(key_path.parent_path())) {
 		std::filesystem::create_directories(key_path.parent_path());
 	}
 	std::fstream key_file;
@@ -213,16 +213,15 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 }
 
 
-bool FileHandles::loadUserSettings(std::string& name) {
+int FileHandles::loadUserSettings(std::string& name) {
 	if (!std::filesystem::exists(user_settings)) {
-		return false;
+		return -1;
 	}
 	if (!user.is_open()) {
 		user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
 	}
 
 	user.seekg(0, std::ios::beg);
-	bool loaded = false;
 	std::string data;
 	while (true) {
 		if (read(user, data)) {
@@ -232,15 +231,19 @@ bool FileHandles::loadUserSettings(std::string& name) {
 			}
 			else if (data == "hardware_path") {
 				read(user, data);
-				key_path = data;
-				loaded = true;
+				if (verifyDirectory(data) == false) {
+					return 1;
+				}
+				else {
+					key_path = data;
+				}
 			}
 		}
 		else {
 			break;
 		}
 	}
-	return loaded;
+	return 0;
 }
 
 

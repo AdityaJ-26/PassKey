@@ -112,24 +112,17 @@ void System::loadMetadata() {
 int System::createNewUser(const std::string& name, const std::string& hardware_path) {
 	sys_files->generateUserFile();
 
-	if (!sys_files->verifyDirectory(hardware_path)) {
-		return -1;
-	}
 	sys_files->storeUserData(hardware_path, name);
 	sys_files->createKeyFile(hardware_path);
 	return 0;
 }
 
 
-bool System::loadUser() {
+int System::loadUser() {
 	sys_files->initFiles();
 
-	if (sys_files->loadUserSettings(user->nameRef())) {
-		return true;
-	}
-	else {
-		return false;
-	}
+	int status = sys_files->loadUserSettings(user->nameRef());
+	return status;
 }
 
 

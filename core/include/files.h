@@ -45,7 +45,7 @@ class FileHandles {
 		void initFiles();
 		void generateUserFile();
 		void storeUserData(const std::string&, const std::string&);
-		bool loadUserSettings(std::string&);
+		int loadUserSettings(std::string&);
 
 		// data operations
 
