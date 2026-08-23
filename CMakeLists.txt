@@ -55,4 +55,9 @@ if (WIN32)
             "$<TARGET_FILE_DIR:passkey>"
         COMMENT "Copying libsodium.dll to executable directory"
     )
+elseif (LINUX)
+	set_target_properties(passkey PROPERTIES
+        BUILD_RPATH "$ORIGIN"
+        INSTALL_RPATH "$ORIGIN"
+    )	
 endif()
