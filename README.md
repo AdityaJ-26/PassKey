@@ -22,33 +22,33 @@ Check the software [release](https://github.com/AdityaJ-26/PassKey/releases)
 ## Structure
 ```
 [PassKey]
-  |
-  |-----core                             # software core implementation
-  |     |
-  |     |-----include
-  |     |     |
-  |     |     |-----(.h)                 # public headers
-  |     | 
-  |     |-----src                        # private headers and implementations .cpp files
-  |     |     |
-  |     |     |-----(.h/.cpp)
-  |     |
-  |     |-----CMakeLists.txt             # core subdirectory CML
-  |
-  |-----cli                              # cli implementation, abstracts core
-  |     |
-  |     |-----src
-  |           |
-  |           |-----cli.cpp/cli.h
-  |
-  |-----main.cpp                         # main()
-  |
-  |-----CMakeLists.txt                   # root CML
-  |
-  |-----third_party                      # stores third_party libs (libsodium)
-  |
-  |-----README.md
-  |-----.gitignore
+ |
+ |-----core                             # software core implementation
+ |     |
+ |     |-----include
+ |     |     |
+ |     |     |-----(.h)                 # public headers
+ |     | 
+ |     |-----src                        # private headers and implementations .cpp files
+ |     |     |
+ |     |     |-----(.h/.cpp)
+ |     |
+ |     |-----CMakeLists.txt             # core subdirectory CML
+ |
+ |-----cli                              # cli implementation, abstracts core
+ |     |
+ |     |-----src
+ |           |
+ |           |-----cli.cpp/cli.h
+ |
+ |-----main.cpp                         # main()
+ |
+ |-----CMakeLists.txt                   # root CML
+ |
+ |-----third_party                      # stores third_party libs (libsodium)
+ |
+ |-----README.md
+ |-----.gitignore
 ```
 
 ## How to Build
@@ -77,4 +77,23 @@ cmake --build build
 
 # how to execute
 ./build/Debug/passkey
+```
+
+## External Library
+uses **libsodium** for cryptographic functionalities, [libsodium Github](https://github.com/jedisct1/libsodium), [libsodium Docs](https://libsodium.gitbook.io/doc)<br>
+requires libsodium's shared library(dynamic library) and include files to compile, hence download the files and put them in rootDir/third_party as structure below
+```
+[PassKey]
+ |
+ |-----third_party
+       |
+       |-----libsodium
+             |
+             |-----sodium.h
+             |
+             |-----sodium
+             |     |
+             |     |-----(libsodium .h files)
+             |
+             |-----(libsodium.dll / libsodium.so)
 ```
