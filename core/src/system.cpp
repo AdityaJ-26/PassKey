@@ -201,8 +201,3 @@ void System::displayMetadataList() const {
 		std::cout << "-> " << meta;
 	}
 }
-
-
-void System::clear() {
-	metadata_list.clear();
-}

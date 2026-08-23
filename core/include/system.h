@@ -28,7 +28,6 @@ class System {
 		void addEntry(const CharBuffer&, const SecureCharBuffer&, const SecureCharBuffer&);
 		bool searchEntry(const CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
 		void displayMetadataList() const;
-		void clear();
 };
 
 # endif // ! SYSTEM_H

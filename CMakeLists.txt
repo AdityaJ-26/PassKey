@@ -16,19 +16,11 @@ if (LINUX)
 		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
 	)
 elseif (WIN32)
-	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		set_target_properties(libsodium PROPERTIES
-			IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.dll"
-			IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.lib"
-			INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
-			)
-	else()
-		set_target_properties(libsodium PROPERTIES
-			IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/release/libsodium.dll"
-			IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/release/libsodium.lib"
-			INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
-		)
-	endif()
+	set_target_properties(libsodium PROPERTIES
+		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/libsodium.dll"
+		IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/libsodium.lib"
+		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium"
+	)
 endif()
 
 
@@ -57,10 +49,9 @@ target_sources(passkey
 
 # -----post build operations-----
 if (WIN32)
-	add_custom_command(TARGET passkey POST_BUILD
+    add_custom_command(TARGET passkey POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/debug/libsodium.dll>"
-            "$<$<NOT:$<CONFIG:Debug>>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/release/libsodium.dll>"
+            "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/libsodium.dll"
             "$<TARGET_FILE_DIR:passkey>"
         COMMENT "Copying libsodium.dll to executable directory"
     )

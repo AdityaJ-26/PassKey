@@ -54,7 +54,6 @@ void CLI::processInput(const std::string& command) {
 	}
 	else if (command == "exit") {
 		running = false;
-		system->clear();
 		std::cout << "User Logged Out...\n";
 	}
 	else if (command == "new") {
