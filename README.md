@@ -1,9 +1,9 @@
-                                ██████╗  █████╗ ███████╗███████╗██╗  ██╗███████╗██╗   ██╗
-                                ██╔══██╗██╔══██╗██╔════╝██╔════╝██║ ██╔╝██╔════╝╚██╗ ██╔╝
-                                ██████╔╝███████║███████╗███████╗█████╔╝ █████╗   ╚████╔╝
-                                ██╔═══╝ ██╔══██║╚════██║╚════██║██╔═██╗ ██╔══╝    ╚██╔╝
-                                ██║     ██║  ██║███████║███████║██║  ██╗███████╗   ██║
-                                ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝
+                              ██████╗  █████╗ ███████╗███████╗██╗  ██╗███████╗██╗   ██╗
+                              ██╔══██╗██╔══██╗██╔════╝██╔════╝██║ ██╔╝██╔════╝╚██╗ ██╔╝
+                              ██████╔╝███████║███████╗███████╗█████╔╝ █████╗   ╚████╔╝
+                              ██╔═══╝ ██╔══██║╚════██║╚════██║██╔═██╗ ██╔══╝    ╚██╔╝
+                              ██║     ██║  ██║███████║███████║██║  ██╗███████╗   ██║
+                              ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![Tests](https://img.shields.io/badge/test-pending-lightgrey)
 ![Version](https://img.shields.io/badge/version-v0.1.0-blue)
@@ -78,6 +78,23 @@ cmake --build build
 # how to execute
 ./build/Debug/passkey
 ```
+
+## Docker Container
+the project contains a [Dockerfile](Dockerfile) for creating a build environment container.<br>
+to use the container use
+```
+sudo docker build -t passkey/passkey_build:0.1 -f Dockerfile .
+
+# run the docker container with mounted directory in bash
+sudo docker run -it --rm --name=project \
+--mount type=bind,source=${PWD},target=/passkey \
+passkey/passkey_build:0.1 \
+bash
+
+# change directory to passkey inside container
+cd passkey
+```
+
 
 ## External Library
 uses **libsodium** for cryptographic functionalities, [libsodium Github](https://github.com/jedisct1/libsodium), [libsodium Docs](https://libsodium.gitbook.io/doc)<br>
