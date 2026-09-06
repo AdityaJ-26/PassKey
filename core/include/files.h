@@ -36,10 +36,10 @@ class FileHandles {
 		bool verifyDirectory(const std::string&) const;	
 	
 		// key operations
-		void createKeyFile(const std::string&);
+		bool createKeyFile(const std::string&);
 		void openKeyFile(std::fstream&);
 		void storeKeyData(const SecureCharBuffer&, const CharBuffer&, const CharBuffer&);
-		void retrieveKeyData(SecureCharBuffer&, CharBuffer&, CharBuffer&);
+		int retrieveKeyData(SecureCharBuffer&, CharBuffer&, CharBuffer&);
 
 		// user operations
 		void initFiles();

@@ -85,14 +85,18 @@ T FileHandles::read(std::fstream& file) {
 // key functions
 /* -------------------------------------------------- */
 
-void FileHandles::createKeyFile(const std::string& path) {
+bool FileHandles::createKeyFile(const std::string& path) {
 	this->key_path = path;
+	bool created = true;
 	if (!std::filesystem::exists(key_path.parent_path()) && is_directory(key_path.parent_path())) {
-		std::filesystem::create_directories(key_path.parent_path());
+		if (!std::filesystem::create_directories(key_path.parent_path())) {
+			return false;
+		}
 	}
 	std::fstream key_file;
 	key_file.open(key_path, std::ios::binary | std::ios::out);
 	key_file.close();
+	return true;
 }
 
 
@@ -138,9 +142,16 @@ void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer
 }
 
 
-void FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
+int FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
+	if (verifyDirectory(key_path) == false) {
+		return FILE_DO_NOT_EXIST;
+	}
+	
 	std::fstream key_file;
 	key_file.open(key_path, std::ios::binary | std::ios::in);
+	if (!key_file.is_open()) {
+		return FILE_READ_ERROR;
+	}
 
 	read(key_file, enc_key);
 	read(key_file, salt);
@@ -186,9 +197,6 @@ void FileHandles::generateUserFile() {
 	user.close();
 
 	user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
-	if (!user.is_open()) {
-		throw Error{ "_file_error : error creating user_file" };
-	}
 }
 
 
@@ -215,7 +223,7 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 
 int FileHandles::loadUserSettings(std::string& name) {
 	if (!std::filesystem::exists(user_settings)) {
-		return -1;
+		return FILE_DO_NOT_EXIST;
 	}
 	if (!user.is_open()) {
 		user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
@@ -231,19 +239,14 @@ int FileHandles::loadUserSettings(std::string& name) {
 			}
 			else if (data == "hardware_path") {
 				read(user, data);
-				if (verifyDirectory(data) == false) {
-					return 1;
-				}
-				else {
-					key_path = data;
-				}
+				key_path = data;
 			}
 		}
 		else {
 			break;
 		}
 	}
-	return 0;
+	return SUCCESS;
 }
 
 

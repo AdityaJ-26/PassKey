@@ -111,16 +111,14 @@ void System::loadMetadata() {
 /* -------------------------------------------------- */
 int System::createNewUser(const std::string& name, const std::string& hardware_path) {
 	sys_files->generateUserFile();
-
 	sys_files->storeUserData(hardware_path, name);
-	sys_files->createKeyFile(hardware_path);
-	return 0;
+	bool status = sys_files->createKeyFile(hardware_path);
+	return (status) ? SUCCESS : ERROR;
 }
 
 
 int System::loadUser() {
 	sys_files->initFiles();
-
 	int status = sys_files->loadUserSettings(user->nameRef());
 	return status;
 }
@@ -134,16 +132,12 @@ int System::unlockKey(const SecureString& password) {
 	CharBuffer salt;
 	SecureCharBuffer enc_key;
 
-	int exit_code = 0;
-	sys_files->retrieveKeyData(enc_key, salt, nonce);
+	int exit_code;
+	exit_code = sys_files->retrieveKeyData(enc_key, salt, nonce);
 
-	if (!unlockVaultKey(enc_key, password, salt, nonce, vault_key)) {
-		exit_code = 1;
+	if (exit_code == SUCCESS) {
+		exit_code = unlockVaultKey(enc_key, password, salt, nonce, vault_key);
 	}
-	else {
-		exit_code = 0;
-	}
-
 	zero(nonce);
 	zero(salt);
 	return exit_code;

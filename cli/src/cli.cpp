@@ -17,50 +17,25 @@ void CLI::processInput(const std::string& command) {
 	if (command.size() == 0) {
 		return;
 	}
+
+	// ----- utitlity commands -----
+	// help command, prints the command list
 	else if (command == "help") {
 		printHelpMenu();
 	}
-	else if (command == "login") {
-		int status = system->loadUser();
-
-		if (status == -1) {
-			std::cout << "No user found...\n"
-				      << "Create New User...\n";
-			return;
-		}
-		else if (status == 1) {
-			std::cout << "Hardware Path cannot be found...\n"
-					  << "Connect the hardware key and try again...\n";
-			return;
-		}
-
-		SecureString password;
-		std::cout << "Enter Master Password : ";
-		std::cin >> password;
-
-		status = system->unlockKey(password);
-		zero(password);
-
-		if (status == 1) {
-			std::cout << "Wrong Password...\n"
-					  << "Try Again..\n";
-		}
-		else {
-			std::cout << "Correct Password...\n"
-					  << "Unlocked Vault...\n";
-			std::cout << "Welcome " << system->name() << "\n";
-			system->loadMetadata();
-			loggedIn = true;
-		}
-	}
+	// clear command, prints to the top of screen pushing out previous content
 	else if (command == "clear") {
 		std::cout << "\033[2J\033[H";
 		printCLI();
 	}
+	// exit command, exits CLI
 	else if (command == "exit") {
 		running = false;
 		std::cout << "User Logged Out...\n";
 	}
+
+	// ----- user creation/login commands -----
+	// new user command
 	else if (command == "new") {
 		std::string name;
 		std::string hardware_path;
@@ -71,20 +46,61 @@ void CLI::processInput(const std::string& command) {
 		std::cout << "Enter Hardware Path : ";
 		std::cin >> hardware_path;
 
-		if (system->createNewUser(name, hardware_path) != 0) {
+		if (system->createNewUser(name, hardware_path) == ERROR) {
 			std::cout << "Entered Hardware Path cannot be found...\n"
 					  << "Connect the hardware key and try again...\n";
+			return;
 		}
-		else {
-			SecureString password;
-			std::cout << "Set Master Password : ";
-			std::cin >> password;
-			system->createVaultKey(password);
-			zero(password);
-			std::cout << "New User Created\n"
-					  << "Login to Proceed..\n";
+		SecureString password;
+		std::cout << "Set Master Password : ";
+		std::cin >> password;
+		system->createVaultKey(password);
+		zero(password);
+		std::cout << "New User Created\n"
+				  << "Login to Proceed..\n";
+	}
+
+	// login command
+	else if (command == "login") {
+		int status = system->loadUser();
+		if (status == FILE_DO_NOT_EXIST) {
+			std::cout << "No user found...\n"
+				      << "Create New User...\n";
+			return;
+		}
+
+		SecureString password;
+		std::cout << "Enter Master Password : ";
+		std::cin >> password;
+		
+		status = system->unlockKey(password);
+		zero(password);
+
+		switch (status) {
+			case FILE_DO_NOT_EXIST:
+				std::cout << "Hardware Path cannot be found...\n"
+						  << "Connect the hardware key and try again...\n";
+				break;
+			case FILE_READ_ERROR:
+				std::cout << "Error Reading Key...\n"
+						  << "Try Again...\n";
+				break;
+			case FAIL:
+				std::cout << "Wrong Password...\n"
+					  	  << "Try Again..\n";
+				break;
+			case SUCCESS:
+				std::cout << "Correct Password...\n"
+					  	  << "Unlocked Vault...\n";
+				std::cout << "Welcome " << system->name() << "\n";
+				system->loadMetadata();
+				loggedIn = true;
+				break;
 		}
 	}
+
+	// ----- operation commands -----
+	// check for user login for performing user commands
 	else if (!loggedIn) {
 		std::cout << "Error...\n"
 				  << "Login to Continue..\n";

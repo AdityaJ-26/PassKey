@@ -30,4 +30,16 @@ constexpr uint64_t DATA_BUFFER_SIZE = 256;
 */
 constexpr uint64_t META_BUFFER_SIZE = 64;
 
+
+/* -------------------------------------------------- */
+// return codes
+/* -------------------------------------------------- */  
+enum returns_codes {
+    ERROR = -1,
+    SUCCESS = 0,
+	FAIL = 1,
+	FILE_DO_NOT_EXIST = 2,
+    FILE_READ_ERROR = 3,
+};
+
 #endif  // ! CONTANTS_H 
