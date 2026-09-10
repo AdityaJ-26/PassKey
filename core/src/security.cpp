@@ -37,7 +37,7 @@ SecureCharBuffer derivePasswordKey(const SecureString& password, const CharBuffe
 		crypto_pwhash_OPSLIMIT_MODERATE, crypto_pwhash_MEMLIMIT_MODERATE,
 		crypto_pwhash_ALG_DEFAULT) != 0)
 	{
-		throw Error{ "_keygen_error : error deriving key from password " };
+		return SecureCharBuffer ();
 	}
 	return password_derived_key;
 }
@@ -53,6 +53,9 @@ SecureCharBuffer derivePasswordKey(const SecureString& password, const CharBuffe
 */
 SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer& salt, const CharBuffer& nonce)  {
 	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
+	if (password_derived_key.size() == 0) {
+		return SecureCharBuffer();
+	}
 
 	SecureCharBuffer encryption_key = keygen();
 	SecureCharBuffer encrypted_key(crypto_secretbox_MACBYTES + encryption_key.size());
@@ -64,7 +67,8 @@ SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer
 			nonce.data(),
 			password_derived_key.data()) != 0)
 		{
-			throw Error{ "_encrypt_error : failed to encrypt key" };
+			zero(encryption_key);
+			return SecureCharBuffer();
 		}
 	}
 

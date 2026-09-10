@@ -20,8 +20,8 @@ class System {
 		~System();
 
 		const std::string& name() const;
-		void createVaultKey(const SecureString&);
-		int createNewUser(const std::string&, const std::string&);
+		int createVaultKey(const SecureString&, const std::string&);
+		void createNewUser(const std::string&, const std::string&);
 		int loadUser();
 		void loadMetadata();
 		int unlockKey(const SecureString&);

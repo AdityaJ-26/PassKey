@@ -46,15 +46,23 @@ void CLI::processInput(const std::string& command) {
 		std::cout << "Enter Hardware Path : ";
 		std::cin >> hardware_path;
 
-		if (system->createNewUser(name, hardware_path) == ERROR) {
-			std::cout << "Entered Hardware Path cannot be found...\n"
-					  << "Connect the hardware key and try again...\n";
-			return;
-		}
+		system->createNewUser(name, hardware_path);
+		int status;
 		SecureString password;
 		std::cout << "Set Master Password : ";
 		std::cin >> password;
-		system->createVaultKey(password);
+
+		status = system->createVaultKey(password, hardware_path);
+		switch (status) {
+			case FILE_DO_NOT_EXIST:
+				std::cout << "Entered Hardware Path cannot be found...\n"
+						  << "Connect the hardware key and try again...\n";
+				return;
+			case ERROR:
+				std::cout << "Error creating Key...\n"
+						  << "Try Again...\n";
+				return;
+		}
 		zero(password);
 		std::cout << "New User Created\n"
 				  << "Login to Proceed..\n";

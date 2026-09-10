@@ -31,16 +31,26 @@ const std::string& System::name() const {
 * creates and stores vault_key
 * the key is stored in encrypted form in hardware device
 */
-void System::createVaultKey(const SecureString& password) {
+int System::createVaultKey(const SecureString& password, const std::string& path) {
+	bool status = false;
+	status = sys_files->createKeyFile(path);
+	if (status == false) {
+		return FILE_DO_NOT_EXIST;
+	}
+
 	CharBuffer nonce = generateNonce();
 	CharBuffer salt(crypto_pwhash_SALTBYTES);
 	randombytes(salt.data(), salt.size());
 
 	SecureCharBuffer encrypted_vault_key = generateVaultKey(password, salt, nonce);
+	if (encrypted_vault_key.size() == 0) {
+		return ERROR;
+	}
 	sys_files->storeKeyData(encrypted_vault_key, salt, nonce);
 
 	zero(salt);
 	zero(nonce);
+	return SUCCESS;
 }
 
 
@@ -109,11 +119,9 @@ void System::loadMetadata() {
 /* -------------------------------------------------- */
 // user operations
 /* -------------------------------------------------- */
-int System::createNewUser(const std::string& name, const std::string& hardware_path) {
+void System::createNewUser(const std::string& name, const std::string& hardware_path) {
 	sys_files->generateUserFile();
 	sys_files->storeUserData(hardware_path, name);
-	bool status = sys_files->createKeyFile(hardware_path);
-	return (status) ? SUCCESS : ERROR;
 }
 
 
