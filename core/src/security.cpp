@@ -80,23 +80,21 @@ SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer
 /* -------------------------------------------------- */
 // vault_key decryption
 /* -------------------------------------------------- */
-bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key)  {
-	SecureCharBuffer encryption_key(enc_key.size() - crypto_secretbox_MACBYTES);
-	bool decrypted = true
-		;
+SecureCharBuffer decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, SecureCharBuffer& encrypted_key)  {
+	SecureCharBuffer encryption_key(encrypted_key.size() - crypto_secretbox_MACBYTES);
+	bool decrypted = true;
 	if (crypto_secretbox_open_easy(
 		encryption_key.data(),
-		enc_key.data(),
-		enc_key.size(),
+		encrypted_key.data(),
+		encrypted_key.size(),
 		nonce.data(),
 		password_derived_key.data()) != 0)
 	{
 		decrypted = false;
 	}
-	zero(enc_key);
+	zero(encrypted_key);
 	zero(nonce);
-	zero(enc_key);
-	return decrypted;
+	return (decrypted) ? encryption_key : SecureCharBuffer();
 }
 
 
@@ -104,12 +102,19 @@ bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, 
 // vault_key unlock function
 /* -------------------------------------------------- */
 /*
-* unlocks the encrypted_vault_key using password_derived_key and returns success return code (boolean)
+* unlocks the encrypted_vault_key using password_derived_key and returns success return code
 */
-bool unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
+int unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
 	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
-	zero(salt);
-
+	
 	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
-	return decryptVaultKey(password_derived_key, nonce, encrypted_key, encryption_key);
+	SecureCharBuffer vault_key = decryptVaultKey(password_derived_key, nonce, encrypted_key);
+	zero(salt);
+	zero(nonce);
+	zero(password_derived_key);
+
+	if (vault_key.size() == 0) {
+		return ERROR;
+	}
+	return SUCCESS;
 }

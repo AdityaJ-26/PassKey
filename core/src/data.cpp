@@ -112,11 +112,14 @@ void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureC
 /* -------------------------------------------------- */
 // public helper for accessing data
 /* -------------------------------------------------- */
-void Data::getEncryptedData(SecureCharBuffer& enc_pass, CharBuffer& pass_nonce, SecureCharBuffer& enc_user, CharBuffer& user_nonce) const {
-	enc_pass = encrypt_password;
-	enc_user = encrypt_username;
-	pass_nonce = password_nonce;
-	user_nonce = username_nonce;
+void Data::getEncryptedData(
+	SecureCharBuffer& encrypted_username, CharBuffer& username_nonce, 
+	SecureCharBuffer& encrypted_password, CharBuffer& password_nonce
+) const {
+	encrypted_password = encrypt_password;
+	encrypted_username = encrypt_username;
+	password_nonce = password_nonce;
+	username_nonce = username_nonce;
 }
 
 void Data::getData(SecureCharBuffer& enc_pass, SecureCharBuffer& enc_user, const SecureCharBuffer& key) const {

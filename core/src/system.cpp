@@ -53,6 +53,25 @@ int System::createVaultKey(const SecureString& password, const std::string& path
 	return SUCCESS;
 }
 
+/*
+* loads key_data from key.bin [vault_key_file] and decrypts it with provided password and loads the decrypted key into System::vault_key
+*/
+int System::unlockKey(const SecureString& password) { 
+	CharBuffer nonce;
+	CharBuffer salt;
+	SecureCharBuffer encrypted_key;
+
+	int exit_code;
+	exit_code = sys_files->retrieveKeyData(encrypted_key, salt, nonce);
+
+	if (exit_code == SUCCESS) {
+		exit_code = unlockVaultKey(encrypted_key, password, salt, nonce, vault_key);
+	}
+	zero(nonce);
+	zero(salt);
+	zero(encrypted_key);
+	return exit_code;
+}
 
 
 /* -------------------------------------------------- */
@@ -78,9 +97,7 @@ int System::insert(const CharBuffer& data) {
 }
 
 
-/*
-* binary search to get metadata index from metadata_list
-*/
+//binary search to get metadata index from metadata_list
 int System::find(const CharBuffer& data) const {
 	int low = 0;
 	int high = metadata_list.size() - 1;
@@ -102,13 +119,11 @@ int System::find(const CharBuffer& data) const {
 }
 
 
-/*
-* reads metadata from file into meta_list in sorted order for fast accessing
-*/
+// reads metadata from file into meta_list in sorted order for fast accessing
 void System::loadMetadata() {
 	CharBuffer data;
 	int offset{ 0 };
-	while (sys_files->readMetadata(data, offset) != 1) {
+	while (sys_files->readMetadata(data, offset) != FAIL) {
 		offset++;
 		this->metadata_list.push_back(data);
 	}
@@ -132,62 +147,46 @@ int System::loadUser() {
 }
 
 
-/*
-* loads key_data from key.bin [vault_key_file] and decrypts it with provided password and loads the decrypted key into System::vault_key
-*/
-int System::unlockKey(const SecureString& password) { 
-	CharBuffer nonce;
-	CharBuffer salt;
-	SecureCharBuffer enc_key;
-
-	int exit_code;
-	exit_code = sys_files->retrieveKeyData(enc_key, salt, nonce);
-
-	if (exit_code == SUCCESS) {
-		exit_code = unlockVaultKey(enc_key, password, salt, nonce, vault_key);
-	}
-	zero(nonce);
-	zero(salt);
-	return exit_code;
-}
-
-
-
 /* -------------------------------------------------- */
 // user interactions operations
 /* -------------------------------------------------- */
 void System::addEntry(const CharBuffer& metadata, const SecureCharBuffer& username, const SecureCharBuffer& password) {
-	Data data(username, password, vault_key);
+	Data* data = new Data(username, password, vault_key);
+	
 	CharBuffer user_nonce, pass_nonce;
-
 	SecureCharBuffer encrypted_password;
 	SecureCharBuffer encrypted_username;
-	data.getEncryptedData(encrypted_password, pass_nonce, encrypted_username, user_nonce);
+	data->getEncryptedData(encrypted_username, user_nonce, encrypted_password, pass_nonce);
 
 	int64_t data_offset = sys_files->storeCredentials(encrypted_password, pass_nonce, encrypted_username, user_nonce);
 	int offset = insert(metadata);
 	sys_files->storeMetadata(metadata, data_offset, offset);
+	
+	delete data;
+	data = nullptr;
 }
 
 
-bool System::searchEntry(const CharBuffer& metadata, SecureCharBuffer& username, SecureCharBuffer& password) {
+int System::searchEntry(const CharBuffer& metadata, SecureCharBuffer& username, SecureCharBuffer& password) {
 	int index = find(metadata);
 
 	if (index == -1) {
-		return false;
+		return FAIL;
 	}
-	uint64_t offset = sys_files->getOffset(index);
+	uint64_t data_offset = sys_files->getDataOffset(index);
 
 	CharBuffer user_nonce;
 	CharBuffer pass_nonce;
 
-	sys_files->retrieveCredentials(password, pass_nonce, username, user_nonce, offset);
-	Data data(password, pass_nonce, username, user_nonce);
-	data.decrypt(password, username, vault_key);
+	sys_files->retrieveCredentials(password, pass_nonce, username, user_nonce, data_offset);
+	Data* data = new Data(password, pass_nonce, username, user_nonce);
+	data->decrypt(password, username, vault_key);
 
 	zero(user_nonce);
 	zero(pass_nonce);
-	return true;
+	delete data;
+	data = nullptr;
+	return SUCCESS;
 }
 
 

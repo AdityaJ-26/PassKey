@@ -13,6 +13,9 @@ CLI::~CLI() {
 	system = nullptr;
 }
 
+/* -------------------------------------------------- */
+// CLI commands processing function
+/* -------------------------------------------------- */
 void CLI::processInput(const std::string& command) {
 	if (command.size() == 0) {
 		return;
@@ -108,12 +111,14 @@ void CLI::processInput(const std::string& command) {
 	}
 
 	// ----- operation commands -----
-	// check for user login for performing user commands
+	// check for user login for performing user operation commands
 	else if (!loggedIn) {
 		std::cout << "Error...\n"
 				  << "Login to Continue..\n";
 		return;
 	}
+
+	// new credential entry command
 	else if (command == "add") {
 		CharBuffer metadata;
 		SecureCharBuffer username;
@@ -132,9 +137,13 @@ void CLI::processInput(const std::string& command) {
 		zero(username);
 		zero(password);
 	}
+
+	// display all credentials metadata
 	else if (command == "ls") {
 		system->displayMetadataList();
 	}
+
+	// search for a specific credential
 	else if (command == "search") {
 		CharBuffer metadata;
 		std::cout << "Enter metadata : ";
@@ -142,7 +151,7 @@ void CLI::processInput(const std::string& command) {
 
 		SecureCharBuffer username;
 		SecureCharBuffer password;
-		if (!system->searchEntry(metadata, username, password)) {
+		if (system->searchEntry(metadata, username, password) == FAIL) {
 			std::cout << "No matching entry found..\n";
 		}
 		else {
@@ -151,8 +160,17 @@ void CLI::processInput(const std::string& command) {
 		}
 		zero(metadata);
 	}
+
+	else {
+		std::cout << "Invalid Command...\n"
+				  << "Type \"help\" to see available commands.\n";
+	}
 }
 
+
+/* -------------------------------------------------- */
+// CLI graphic/text printing functions
+/* -------------------------------------------------- */
 void CLI::printCLI() const {
 		std::cout << std::setw(50) << "______              _   __           \n"
 				  << std::setw(50) << "| ___ \\            | | / /           \n"
@@ -184,7 +202,7 @@ void CLI::printHelpMenu() const {
 void CLI::printSoftwareInfo() const {
 	std::cout << std::setw(40) << "Secure Password Manager\n"
 			  << "---------------------------------------------------------\n"
-		      << "Version : v0.1.0\n"
+		      << "Version : v0.1.0-beta\n"
 			  << "Type 'help' to see available commands.\n"
 		      << "---------------------------------------------------------\n"
 		      << "\n\n";

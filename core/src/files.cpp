@@ -157,6 +157,7 @@ int FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, Ch
 	read(key_file, salt);
 	read(key_file, nonce);
 	key_file.close();
+	return SUCCESS;
 }
 
 
@@ -317,7 +318,7 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, uint64_t data_index,
 * using meta.clear() as meta is getting to EOF while loading metadata into meta_list, this sets the eofbit and if the last read operation fails,
   it sets failbit that stops all seek() operations on fstream and fails the system
 */
-uint64_t FileHandles::getOffset(int offset) {
+uint64_t FileHandles::getDataOffset(int offset) {
 	meta.clear();
 	meta.seekg(offset * META_BUFFER_SIZE, std::ios::beg);
 	uint64_t data_offset{ 0 };
@@ -349,8 +350,8 @@ uint64_t FileHandles::readMetadata(CharBuffer& metadata, int offset) {
 */
 uint64_t FileHandles::storeCredentials(
 	const SecureCharBuffer& enc_pass, const CharBuffer& pass_nonce,
-	const SecureCharBuffer& enc_user, const CharBuffer& user_nonce) 
-{
+	const SecureCharBuffer& enc_user, const CharBuffer& user_nonce
+) {
 	vault.seekp(0, std::ios::end);
 	uint64_t pointer_offset = static_cast<std::streamoff>(vault.tellp());
 	
