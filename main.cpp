@@ -48,6 +48,7 @@ int main(void) {
 		char c = getchar();
 		std::cout << "\033[2J\033[H";
 		
+		// main application loop
 		app->printCLI();
 		while (app->running) {
 			app->printHeader();
@@ -56,17 +57,16 @@ int main(void) {
 			app->processInput(input);
 		}
 	}
-	catch (Error& e) 
-	{
+	catch (Error& e) {
+		delete app;
 		std::cout << e.what() << std::endl;
 	}
-	catch (std::exception& e) 
-
-	{
+	catch (std::exception& e) {
+		delete app;
 		std::cout << e.what();
 	}
-	catch (...)
-	{
+	catch (...) {
+		delete app;
 		std::cout << "unexpected error" << std::endl;
 	}
 	delete app;

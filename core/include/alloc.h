@@ -48,8 +48,9 @@ class SecureAllocator {
 		template <typename U>
 		SecureAllocator(const SecureAllocator<U>&) noexcept {}
 
+		// mandatory
 		// returns secure allocated memory block
-		pointer allocate(size_type numObjects) {					// mandatory
+		pointer allocate(size_type numObjects) {
 			pointer ptr = static_cast<pointer>(sodium_allocarray(numObjects, sizeof(T)));
 			if (ptr == nullptr) {
 				throw std::bad_alloc();
@@ -63,8 +64,9 @@ class SecureAllocator {
 			return allocate(numObjects);
 		}
 
+		// mandatory
 		// sodium_free deallocates memory but before that verifies canary for any buffer overflow and terminates process if required
-		void deallocate(pointer ptr, size_type numObjects) {		// mandatory
+		void deallocate(pointer ptr, size_type numObjects) {		
 			sodium_free(ptr);
 		}
 

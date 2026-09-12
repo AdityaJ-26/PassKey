@@ -22,7 +22,7 @@ inline SecureCharBuffer keygen() {
 // key_derivation(password, salt)
 /* -------------------------------------------------- */
 /*
-* generate a encryption_key from master_password and salt
+* generate a encryption_key from master_password and salt using Argon2id
 * OPSLIMIT and MEMLIMIT are resources limiting factors, uses more CPU cycles (increasing CPU use) and more memory (increased RAM USAGE)
 * MODERATE variant requires 256 MiB of dedicated RAM and takes about 0.7 seconds on a 2.8 GHz Core i7 CPU [libsodium docs].
 */
@@ -37,7 +37,7 @@ SecureCharBuffer derivePasswordKey(const SecureString& password, const CharBuffe
 		crypto_pwhash_OPSLIMIT_MODERATE, crypto_pwhash_MEMLIMIT_MODERATE,
 		crypto_pwhash_ALG_DEFAULT) != 0)
 	{
-		throw Error{ "_keygen_error : error deriving key from password " };
+		return SecureCharBuffer ();
 	}
 	return password_derived_key;
 }
@@ -53,6 +53,9 @@ SecureCharBuffer derivePasswordKey(const SecureString& password, const CharBuffe
 */
 SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer& salt, const CharBuffer& nonce)  {
 	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
+	if (password_derived_key.size() == 0) {
+		return SecureCharBuffer();
+	}
 
 	SecureCharBuffer encryption_key = keygen();
 	SecureCharBuffer encrypted_key(crypto_secretbox_MACBYTES + encryption_key.size());
@@ -64,7 +67,8 @@ SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer
 			nonce.data(),
 			password_derived_key.data()) != 0)
 		{
-			throw Error{ "_encrypt_error : failed to encrypt key" };
+			zero(encryption_key);
+			return SecureCharBuffer();
 		}
 	}
 
@@ -76,23 +80,21 @@ SecureCharBuffer generateVaultKey(const SecureString& password, const CharBuffer
 /* -------------------------------------------------- */
 // vault_key decryption
 /* -------------------------------------------------- */
-bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, SecureCharBuffer& enc_key, SecureCharBuffer& encrytion_key)  {
-	SecureCharBuffer encryption_key(enc_key.size() - crypto_secretbox_MACBYTES);
-	bool decrypted = true
-		;
+SecureCharBuffer decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, SecureCharBuffer& encrypted_key)  {
+	SecureCharBuffer encryption_key(encrypted_key.size() - crypto_secretbox_MACBYTES);
+	bool decrypted = true;
 	if (crypto_secretbox_open_easy(
 		encryption_key.data(),
-		enc_key.data(),
-		enc_key.size(),
+		encrypted_key.data(),
+		encrypted_key.size(),
 		nonce.data(),
 		password_derived_key.data()) != 0)
 	{
 		decrypted = false;
 	}
-	zero(enc_key);
+	zero(encrypted_key);
 	zero(nonce);
-	zero(enc_key);
-	return decrypted;
+	return (decrypted) ? encryption_key : SecureCharBuffer();
 }
 
 
@@ -100,12 +102,19 @@ bool decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuffer& nonce, 
 // vault_key unlock function
 /* -------------------------------------------------- */
 /*
-* unlocks the encrypted_vault_key using password_derived_key and returns success return code (boolean)
+* unlocks(decrypts) the encrypted_vault_key using password_derived_key and returns status exit_code
 */
-bool unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
+int unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& vault_key) {
 	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
+	
+	vault_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
+	vault_key = decryptVaultKey(password_derived_key, nonce, encrypted_key);
 	zero(salt);
+	zero(nonce);
+	zero(password_derived_key);
 
-	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
-	return decryptVaultKey(password_derived_key, nonce, encrypted_key, encryption_key);
+	if (vault_key.size() == 0) {
+		return FAIL;
+	}
+	return SUCCESS;
 }

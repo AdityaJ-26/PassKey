@@ -27,10 +27,10 @@ Data::Data(
 
 // constructor to store credentials read from file, encrypted form
 Data::Data(
-	const SecureCharBuffer& pass,
-	const CharBuffer& pass_nonce,
 	const SecureCharBuffer& user,
-	const CharBuffer& user_nonce) :
+	const CharBuffer& user_nonce,
+	const SecureCharBuffer& pass,
+	const CharBuffer& pass_nonce) :
 	encrypt_password(pass), password_nonce(pass_nonce),
 	encrypt_username(user), username_nonce(user_nonce)
 { }
@@ -45,23 +45,25 @@ Data::~Data() {
 
 
 /* -------------------------------------------------- */
-// data encryption method()
+// data encryption/decryption function
 /* -------------------------------------------------- */
-/* UNDERLYING SYSTEM
+/* 
+* encryts the password and username passed
+* UNDERLYING SYSTEM
 * crypto_secretbox_easy() is used that uses XSalsa20-Poly1305 authenticated encryption construction.
 * XSalsa20 is used to encrypt data using 265 bit key and 192 bit nonce.
 * Poly1305 associates a 16 byte MAC with ciphertext (MAC_BYTES), and uses AEAD for authentication.
 */
-void Data::encrypt(const SecureCharBuffer& user, const SecureCharBuffer& pass, const SecureCharBuffer& key) {
-	encrypt_password.resize(pass.size() + crypto_secretbox_MACBYTES);
-	encrypt_username.resize(user.size() + crypto_secretbox_MACBYTES);
+void Data::encrypt(const SecureCharBuffer& username, const SecureCharBuffer& password, const SecureCharBuffer& key) {
+	encrypt_password.resize(password.size() + crypto_secretbox_MACBYTES);
+	encrypt_username.resize(username.size() + crypto_secretbox_MACBYTES);
 	username_nonce = generateNonce();
 	password_nonce = generateNonce();
 
 	if (crypto_secretbox_easy(
 		encrypt_password.data(),
-		pass.data(),
-		pass.size(),
+		password.data(),
+		password.size(),
 		password_nonce.data(),
 		key.data()) < 0)
 	{
@@ -70,8 +72,8 @@ void Data::encrypt(const SecureCharBuffer& user, const SecureCharBuffer& pass, c
 
 	if (crypto_secretbox_easy(
 		encrypt_username.data(),
-		user.data(),
-		user.size(),
+		username.data(),
+		username.size(),
 		username_nonce.data(),
 		key.data()) < 0)
 	{
@@ -80,10 +82,10 @@ void Data::encrypt(const SecureCharBuffer& user, const SecureCharBuffer& pass, c
 }
 
 
-/* -------------------------------------------------- */
-// decrypt data method
-/* -------------------------------------------------- */
-void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureCharBuffer& key) const {
+/*
+* decrypts the data members using key provided and puts decrypted text in parameters passed
+*/
+void Data::decrypt(SecureCharBuffer& user, SecureCharBuffer& pass, const SecureCharBuffer& key) const {
 	pass.resize(encrypt_password.size() - crypto_secretbox_MACBYTES);
 	user.resize(encrypt_username.size() - crypto_secretbox_MACBYTES);
 
@@ -112,9 +114,12 @@ void Data::decrypt(SecureCharBuffer& pass, SecureCharBuffer& user, const SecureC
 /* -------------------------------------------------- */
 // public helper for accessing data
 /* -------------------------------------------------- */
-void Data::getEncryptedData(SecureCharBuffer& enc_pass, CharBuffer& pass_nonce, SecureCharBuffer& enc_user, CharBuffer& user_nonce) const {
-	enc_pass = encrypt_password;
-	enc_user = encrypt_username;
+void Data::getEncryptedData(
+	SecureCharBuffer& encrypted_username, CharBuffer& user_nonce, 
+	SecureCharBuffer& encrypted_password, CharBuffer& pass_nonce
+) const {
+	encrypted_password = encrypt_password;
+	encrypted_username = encrypt_username;
 	pass_nonce = password_nonce;
 	user_nonce = username_nonce;
 }

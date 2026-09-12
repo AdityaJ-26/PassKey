@@ -13,8 +13,8 @@ SecureCharBuffer derivePasswordKey(const SecureString&, const CharBuffer&);
 SecureCharBuffer generateVaultKey(const SecureString&, const CharBuffer&, const CharBuffer&);
 
 // key decryption verification function
-bool decryptVaultKey(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
-bool unlockVaultKey(SecureCharBuffer&, const SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
+SecureCharBuffer decryptVaultKey(SecureCharBuffer&, CharBuffer&, SecureCharBuffer&, SecureCharBuffer&);
+int unlockVaultKey(SecureCharBuffer&, const SecureString&, CharBuffer&, CharBuffer&, SecureCharBuffer&);
 
 
 
