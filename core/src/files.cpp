@@ -2,7 +2,9 @@
 #include "error.h"
 
 
-FileHandles::FileHandles() = default;
+FileHandles::FileHandles() {
+	this->initFiles();
+};
 
 
 FileHandles::~FileHandles() {
@@ -16,7 +18,9 @@ FileHandles::~FileHandles() {
 	meta.close();
 }
 
-
+/*
+* verify for directory's existence, return true for current directory
+*/
 bool FileHandles::verifyDirectory(const std::string& path) const {
 	std::filesystem::path file_path = path;
 	file_path = file_path.parent_path();
@@ -25,13 +29,11 @@ bool FileHandles::verifyDirectory(const std::string& path) const {
 	if (file_path.empty()) {
 		return true;
 	}
-
+	// check path
 	if (std::filesystem::exists(file_path) && is_directory(file_path)) {
 		return true;
 	}
-	else {
-		return false;
-	}
+	return false;
 }
 
 
@@ -39,7 +41,7 @@ bool FileHandles::verifyDirectory(const std::string& path) const {
 // read and write functions
 /* -------------------------------------------------- */
 
-// write functions writes CharBuffer and SecureCharBuffer in binary files as [ buffer.size() ][ buffer ]
+// writes CharBuffer and SecureCharBuffer in binary files as [ buffer.size() ][ buffer ]
 template <typename T>
 void FileHandles::write(std::fstream& file, const T& msg) {
 	if (!file.is_open()) {
@@ -50,6 +52,7 @@ void FileHandles::write(std::fstream& file, const T& msg) {
 	file.write(reinterpret_cast<const char*>(msg.data()), len);
 }
 
+// read CharBuffer and SecureCharBuffer from binary files to parameter passed
 template <typename T>
 bool FileHandles::read(std::fstream& file, T& msg) {
 	if (!file.is_open()) {
@@ -64,6 +67,7 @@ bool FileHandles::read(std::fstream& file, T& msg) {
 	return true;
 }
 
+// reads and return CharBuffer and SecureCharBuffer from binary files
 template <typename T>
 T FileHandles::read(std::fstream& file) {
 	T msg;
@@ -86,13 +90,12 @@ T FileHandles::read(std::fstream& file) {
 /* -------------------------------------------------- */
 
 bool FileHandles::createKeyFile(const std::string& path) {
-	this->key_path = path;
-	bool created = true;
 	if (!std::filesystem::exists(key_path.parent_path()) && is_directory(key_path.parent_path())) {
 		if (!std::filesystem::create_directories(key_path.parent_path())) {
 			return false;
 		}
 	}
+	this->key_path = path;
 	std::fstream key_file;
 	key_file.open(key_path, std::ios::binary | std::ios::out);
 	key_file.close();
@@ -100,38 +103,32 @@ bool FileHandles::createKeyFile(const std::string& path) {
 }
 
 
-// opens key file and if key_path not loaded, loads user and if user not load
-void FileHandles::openKeyFile(std::fstream& key_file) {
+int FileHandles::openKeyFile(std::fstream& key_file) {
 	if (key_file.is_open()) {
-		return;
-	}
-
-	if (key_path.empty()) {
-		std::string name;
-		if (loadUserSettings(name) == false) {
-			std::cout << "Hardware Device Not Connected..." << std::endl;
-			return;
-		}
+		return SUCCESS;
 	}
 
 	key_file.open(key_path, std::ios::binary | std::ios::in | std::ios::out);
 	if (!key_file.is_open()) {
-		throw Error{ "_file_error : failed to access key file" };
+		return ERROR;
 	}
+	return SUCCESS;
 }
 
 
 /*
-* stores the salt used to derive key from password, nonce for master key decryption, and encryption_key
+* stores the salt used to derive key from password, nonce for master key decryption, and encrypted master key in hardware device
 * order 
-	size(enc_key) -> key ->
-	size(salt) -> salt ->
-	size(nonce) -> nonce
+	[ size(enc_key) ] [ key ]
+	[ size(salt) ] [ salt ]
+	[ size(nonce) ] [ nonce ]
 	    
 */
-void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer& salt, const CharBuffer& nonce) {
+int FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer& salt, const CharBuffer& nonce) {
 	std::fstream key_file;
-	openKeyFile(key_file);
+	if (openKeyFile(key_file) == ERROR) {
+		return ERROR;
+	}
 
 	write(key_file, enc_key);
 	write(key_file, salt);
@@ -139,18 +136,18 @@ void FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer
 
 	key_file.flush();
 	key_file.close();
+	return SUCCESS;
 }
 
-
+// reads encrypted master key, nonce and salt from hardware device
 int FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
 	if (verifyDirectory(key_path) == false) {
 		return FILE_DO_NOT_EXIST;
 	}
 	
 	std::fstream key_file;
-	key_file.open(key_path, std::ios::binary | std::ios::in);
-	if (!key_file.is_open()) {
-		return FILE_READ_ERROR;
+	if (openKeyFile(key_file) == ERROR) {
+		return ERROR;
 	}
 
 	read(key_file, enc_key);
@@ -178,9 +175,6 @@ void FileHandles::initFiles() {
 		vault.open(vault_path, std::ios::binary | std::ios::in | std::ios::out);
 	}
 
-	if (!std::filesystem::exists(meta_path.parent_path())) {
-		std::filesystem::create_directories(meta_path.parent_path());
-	}
 	meta.open(meta_path, std::ios::binary | std::ios::in);
 	if (meta.is_open()) {
 		meta.open(meta_path, std::ios::binary | std::ios::out);
@@ -203,9 +197,9 @@ void FileHandles::generateUserFile() {
 
 /*
 * store user_name and vault_key path in user.bin
-* format = [ field.size() ][ field.data() ]
+* format = [ field.size() ][ field.data() ]<newline>[ field2.size() ][ field2.data() ]
 */
-void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::string& name) {
+void FileHandles::storeUserData(const std::string& name, const std::string& hardware_path) {
 	if (!user.is_open()) {
 		generateUserFile();
 	}
@@ -217,19 +211,21 @@ void FileHandles::storeUserData(const std::string& hardwareKeyPath, const std::s
 
 	field = "hardware_path";
 	write(user, field);
-	write(user, hardwareKeyPath);
+	write(user, hardware_path);
 	user.flush();
 }
 
-
+// loads user's name and hardware device path from user file
 int FileHandles::loadUserSettings(std::string& name) {
 	if (!std::filesystem::exists(user_settings)) {
 		return FILE_DO_NOT_EXIST;
 	}
+	
+	user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
 	if (!user.is_open()) {
-		user.open(user_settings, std::ios::binary | std::ios::in | std::ios::out);
+		return FILE_READ_ERROR;
 	}
-
+	user.clear();
 	user.seekg(0, std::ios::beg);
 	std::string data;
 	while (true) {
@@ -318,6 +314,7 @@ void FileHandles::storeMetadata(const CharBuffer& metadata, uint64_t data_index,
 * using meta.clear() as meta is getting to EOF while loading metadata into meta_list, this sets the eofbit and if the last read operation fails,
   it sets failbit that stops all seek() operations on fstream and fails the system
 */
+// read credential offset corresponding to provided metadata's (offset)
 uint64_t FileHandles::getDataOffset(int offset) {
 	meta.clear();
 	meta.seekg(offset * META_BUFFER_SIZE, std::ios::beg);
@@ -342,41 +339,39 @@ uint64_t FileHandles::readMetadata(CharBuffer& metadata, int offset) {
 /*
 * vault file storing
 * order
-	len(pass) -> pass ->
-	len(pass_nonce) -> pass_nonce ->
-	len(user) -> user ->
-	len(user_nonce) -> user_nonce
-	padding
+	[ len(pass) ] [ pass ]
+	[ len(pass_nonce) ] [ pass_nonce ]
+	[ len(user) ] [ user ]
+	[ len(user_nonce) ] [ user_nonce ]
+	[ padding ]
 */
 uint64_t FileHandles::storeCredentials(
-	const SecureCharBuffer& enc_pass, const CharBuffer& pass_nonce,
-	const SecureCharBuffer& enc_user, const CharBuffer& user_nonce
+	const SecureCharBuffer& enc_user, const CharBuffer& user_nonce,
+	const SecureCharBuffer& enc_pass, const CharBuffer& pass_nonce
 ) {
 	vault.seekp(0, std::ios::end);
 	uint64_t pointer_offset = static_cast<std::streamoff>(vault.tellp());
 	
-	write(vault, enc_pass);
-	write(vault, pass_nonce);
 	write(vault, enc_user);
 	write(vault, user_nonce);
+	write(vault, enc_pass);
+	write(vault, pass_nonce);
 
 	vault.flush();
 	return pointer_offset;
 }
 
 
-/* -------------------------------------------------- */
-// read data(creds)
-/* -------------------------------------------------- */
+// reads credentials from passed offset position in vault.bin
 bool FileHandles::retrieveCredentials(
-	SecureCharBuffer& enc_pass, CharBuffer& pass_nonce,
 	SecureCharBuffer& enc_user, CharBuffer& user_nonce,
+	SecureCharBuffer& enc_pass, CharBuffer& pass_nonce,
 	uint64_t offset) 
 {
 	vault.seekg(offset, std::ios::beg); // move to indexed data
 	return
-		read(vault, enc_pass) &&
-		read(vault, pass_nonce) &&
 		read(vault, enc_user) &&
-		read(vault, user_nonce);
+		read(vault, user_nonce) &&
+		read(vault, enc_pass) &&
+		read(vault, pass_nonce);
 }

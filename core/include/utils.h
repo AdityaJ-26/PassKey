@@ -9,9 +9,14 @@ void input( SecureCharBuffer& );
 std::ostream& operator <<( std::ostream&, const SecureCharBuffer& );
 std::ostream& operator <<( std::ostream&, const CharBuffer& );
 
-void zero(CharBuffer&);
-void zero(SecureCharBuffer&);
-void zero(SecureString&);
+/* -------------------------------------------------- */
+// zeroing methods()
+/* -------------------------------------------------- */
+// calls sodium inbuild memzero() to ensure data clearing
+template <typename BUFFER>
+void zero(BUFFER& data) {
+	sodium_memzero(data.data(), data.size());
+}
 
 CharBuffer toLower(CharBuffer);
 

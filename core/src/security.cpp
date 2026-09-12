@@ -22,7 +22,7 @@ inline SecureCharBuffer keygen() {
 // key_derivation(password, salt)
 /* -------------------------------------------------- */
 /*
-* generate a encryption_key from master_password and salt
+* generate a encryption_key from master_password and salt using Argon2id
 * OPSLIMIT and MEMLIMIT are resources limiting factors, uses more CPU cycles (increasing CPU use) and more memory (increased RAM USAGE)
 * MODERATE variant requires 256 MiB of dedicated RAM and takes about 0.7 seconds on a 2.8 GHz Core i7 CPU [libsodium docs].
 */
@@ -102,19 +102,19 @@ SecureCharBuffer decryptVaultKey(SecureCharBuffer& password_derived_key, CharBuf
 // vault_key unlock function
 /* -------------------------------------------------- */
 /*
-* unlocks the encrypted_vault_key using password_derived_key and returns success return code
+* unlocks(decrypts) the encrypted_vault_key using password_derived_key and returns status exit_code
 */
-int unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& encryption_key) {
+int unlockVaultKey(SecureCharBuffer& encrypted_key, const SecureString& password, CharBuffer& salt, CharBuffer& nonce, SecureCharBuffer& vault_key) {
 	SecureCharBuffer password_derived_key = derivePasswordKey(password, salt);
 	
-	encryption_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
-	SecureCharBuffer vault_key = decryptVaultKey(password_derived_key, nonce, encrypted_key);
+	vault_key.resize(encrypted_key.size() - crypto_secretbox_MACBYTES);
+	vault_key = decryptVaultKey(password_derived_key, nonce, encrypted_key);
 	zero(salt);
 	zero(nonce);
 	zero(password_derived_key);
 
 	if (vault_key.size() == 0) {
-		return ERROR;
+		return FAIL;
 	}
 	return SUCCESS;
 }

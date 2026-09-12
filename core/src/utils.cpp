@@ -45,23 +45,6 @@ std::ostream& operator <<( std::ostream& out, const CharBuffer& data )
 	return out;
 }
 
-
-/* -------------------------------------------------- */
-// zeroing methods()
-/* -------------------------------------------------- */
-// calls sodium inbuild memzero() to ensure data clearing
-void zero(CharBuffer& data) {
-	sodium_memzero(data.data(), data.size());
-}
-
-void zero(SecureCharBuffer& data) {
-	sodium_memzero(data.data(), data.size());
-}
-void zero(SecureString& data) {
-	sodium_memzero(data.data(), data.size());
-}
-
-
 /* -------------------------------------------------- */
 // helper functions
 /* -------------------------------------------------- */
@@ -72,12 +55,14 @@ CharBuffer toLower(CharBuffer data) {
 	return data;
 }
 
+// debugging functions
 void printHex(const CharBuffer data) {
 	for (unsigned char c : data) {
 		printf("%02x", c);
 	}
 	puts("");
 }
+// debugging functions
 void printHex(const SecureCharBuffer data) 
 {
 	for (unsigned char c : data) {

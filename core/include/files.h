@@ -37,8 +37,8 @@ class FileHandles {
 	
 		// key operations
 		bool createKeyFile(const std::string&);
-		void openKeyFile(std::fstream&);
-		void storeKeyData(const SecureCharBuffer&, const CharBuffer&, const CharBuffer&);
+		int openKeyFile(std::fstream&);
+		int storeKeyData(const SecureCharBuffer&, const CharBuffer&, const CharBuffer&);
 		int retrieveKeyData(SecureCharBuffer&, CharBuffer&, CharBuffer&);
 
 		// user operations

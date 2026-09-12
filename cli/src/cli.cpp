@@ -74,10 +74,15 @@ void CLI::processInput(const std::string& command) {
 	// login command
 	else if (command == "login") {
 		int status = system->loadUser();
-		if (status == FILE_DO_NOT_EXIST) {
-			std::cout << "No user found...\n"
-				      << "Create New User...\n";
-			return;
+		switch (status) {
+			case FILE_DO_NOT_EXIST:
+				std::cout << "No user found...\n"
+					      << "Create New User...\n";
+				return;
+			case FILE_READ_ERROR:
+				std::cout << "Error Reading User File...\n"
+						  << "Try Again...\n";
+				return;	
 		}
 
 		SecureString password;
@@ -151,12 +156,17 @@ void CLI::processInput(const std::string& command) {
 
 		SecureCharBuffer username;
 		SecureCharBuffer password;
-		if (system->searchEntry(metadata, username, password) == FAIL) {
-			std::cout << "No matching entry found..\n";
-		}
-		else {
-			std::cout << "Username : " << username
-					  << "Password : " << password;
+		int status = system->searchEntry(metadata, username, password);
+		switch (status) {
+			case FAIL:
+				std::cout << "No matching entry found..\n";
+				break;
+			case ERROR:
+				std::cout << "Error reading vault..\n";
+				break;
+			case SUCCESS:
+				std::cout << "Username : " << username
+					  	  << "Password : " << password;
 		}
 		zero(metadata);
 	}

@@ -27,6 +27,11 @@ const std::string& System::name() const {
 	return user->nameRef();
 }
 
+
+/* -------------------------------------------------- */
+// key functions
+/* -------------------------------------------------- */
+
 /*
 * creates and stores vault_key
 * the key is stored in encrypted form in hardware device
@@ -46,7 +51,9 @@ int System::createVaultKey(const SecureString& password, const std::string& path
 	if (encrypted_vault_key.size() == 0) {
 		return ERROR;
 	}
-	sys_files->storeKeyData(encrypted_vault_key, salt, nonce);
+	if (sys_files->storeKeyData(encrypted_vault_key, salt, nonce) == ERROR) {
+		return ERROR;
+	}
 
 	zero(salt);
 	zero(nonce);
@@ -135,8 +142,9 @@ void System::loadMetadata() {
 // user operations
 /* -------------------------------------------------- */
 void System::createNewUser(const std::string& name, const std::string& hardware_path) {
+	sys_files->initFiles();
 	sys_files->generateUserFile();
-	sys_files->storeUserData(hardware_path, name);
+	sys_files->storeUserData(name, hardware_path);
 }
 
 
@@ -158,7 +166,7 @@ void System::addEntry(const CharBuffer& metadata, const SecureCharBuffer& userna
 	SecureCharBuffer encrypted_username;
 	data->getEncryptedData(encrypted_username, user_nonce, encrypted_password, pass_nonce);
 
-	int64_t data_offset = sys_files->storeCredentials(encrypted_password, pass_nonce, encrypted_username, user_nonce);
+	int64_t data_offset = sys_files->storeCredentials(encrypted_username, user_nonce, encrypted_password, pass_nonce);
 	int offset = insert(metadata);
 	sys_files->storeMetadata(metadata, data_offset, offset);
 	
@@ -177,10 +185,12 @@ int System::searchEntry(const CharBuffer& metadata, SecureCharBuffer& username, 
 
 	CharBuffer user_nonce;
 	CharBuffer pass_nonce;
-
-	sys_files->retrieveCredentials(password, pass_nonce, username, user_nonce, data_offset);
-	Data* data = new Data(password, pass_nonce, username, user_nonce);
-	data->decrypt(password, username, vault_key);
+	
+	if (!sys_files->retrieveCredentials(username, user_nonce, password, pass_nonce, data_offset)) {
+		return ERROR;
+	}
+	Data* data = new Data(username, user_nonce, password, pass_nonce);
+	data->getData(username, password, vault_key);
 
 	zero(user_nonce);
 	zero(pass_nonce);
