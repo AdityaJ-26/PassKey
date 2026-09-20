@@ -17,7 +17,9 @@ Provides full control over data as there is no cloud storage. Stores the vault l
 
 The vault_key is stored on external hardware device in encrypted form. To access credentials, the hardware device and the master_password is required, providing Two-Step authentication.<br>
 
-Check the software [release](https://github.com/AdityaJ-26/PassKey/releases)
+Check the software [release](https://github.com/AdityaJ-26/PassKey/releases)<br>.
+
+Check the [Threat Model](docs/threat_model.html) (open in html viewer or browser locally, github will render as plain html code).
 
 ## Structure
 ```
@@ -46,6 +48,11 @@ Check the software [release](https://github.com/AdityaJ-26/PassKey/releases)
  |-----CMakeLists.txt                   # root CML
  |
  |-----third_party                      # stores third_party libs (libsodium)
+ |
+ |-----docs
+ |     |
+ |     |-----architecture.svg
+ |     |-----threat_model.html          # html file for threat_model
  |
  |-----README.md
  |-----.gitignore

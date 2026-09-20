@@ -83,6 +83,7 @@ void Data::encrypt(const SecureCharBuffer& username, const SecureCharBuffer& pas
 
 
 /*
+* decrypts using crypto_secretbox_open_easy() that decrypts and check the MACBYTES long authentication tag and then return -1 if not valid, otherwise decrypt the message followed
 * decrypts the data members using key provided and puts decrypted text in parameters passed
 */
 void Data::decrypt(SecureCharBuffer& user, SecureCharBuffer& pass, const SecureCharBuffer& key) const {

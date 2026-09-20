@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threat Model</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #24292f;
+	  font-size: 20px;
+	  line-height: 1.6;
+    }
+
+    .architecture {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px 0 40px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 18px;
+    }
+
+    th, td {
+      border: 1px solid #d0d7de;
+      padding: 16px;
+      text-align: left;
+    }
+
+    thead th {
+      background: #f6f8fa;
+      text-align: center;
+	  font-size: 20px;
+    }
+
+    thead tr:first-child th {
+      background: #eaeef2;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Threat Model</h1>
+
+  <h2>Architecture</h2>
+
+  <img
+    src="architecture.svg"
+    alt="system architecture diagram"
+    class="architecture"
+  >
+
+  <h2>Threat Analysis</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th colspan="2">Analyse Model</th>
+
+        <th colspan="2">Threat Analysis</th>
+
+        <th colspan="2">Mitigation Plan</th>
+      </tr>
+
+      <tr>
+        <th>Artifact in Diagram</th>
+        <th>TM Element</th>
+        <th>Applicable Threat</th>
+        <th>Threat Description</th>
+		<th>Plan to Mitigate the Risk</th>
+		<th>Implementation</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>(1) User</td>
+        <td>Actor</td>
+        <td>Spoofing</td>
+        <td>Attacker could use user device and pose as user to access vault.<br>Impact : Leaked vault content</td>
+        <td>Use user authentication and login before vault access to prevent unauthorised access.</td>
+        <td>Use master_password to authenticate user.</td>
+      </tr>
+
+      <tr>
+        <td>(2) CLI Interface</td>
+        <td>Data Flow</td>
+        <td>Data Leak</td>
+        <td>Attacker can user the bash history to retrieve sensitive information.<br>Impact : Leaked authorisation credentials (master_password)</td>
+        <td>Use application layer over bash to prevent history and create session.</td>
+        <td>CLI Interface creates application layer so information clears with session.</td>
+      </tr>
+
+	<tr>
+		<td>(3) Hardware Device</td>
+		<td>Physical Devie</td>
+		<td>Theft</td>
+		<td>Attacker could gain physical possession of hardware device storing vault_encryption_key.<br>Impace : Compromised Vault and Data</td>
+		<td>Store the vault_key in encrypted form in hardware device.</td>
+		<td>vault_key is encrypted using password_derived_key from master_password.</td>
+      </tr>
+
+	<tr>
+		<td>(4) Loaded and Unencrypted Data</td>
+		<td>Data</td>
+		<td>RAM Paging / Memory Dumping</td>
+		<td>Attacker can use data loaded in memory for a session by user and swap it to disk.<br>Impact : Data leak</td>
+		<td>Use memory locking for allocated memory of sensitive data elements to prevent RAM paging / dumping.</td>
+		<td>Custom Allocator for allocating locked memory for sensitive data storing elements, [libsodium memlock](https://libsodium.gitbook.io/doc/memory_management).</td>
+      </tr>
+
+	<tr>
+		<td>(5) Key Derivation</td>
+		<td>Cryptographic Operation</td>
+		<td>Brute Force Attack</td>
+		<td>Attacker can offline brute force and derive password_derived_key.</td>
+		<td>Derive password_derived_key from master_password using secure and tested cryptographic algorithms.</td>
+		<td>Use Argon2id to derive password_derived_key degrading the performance of brute force attack.</td>
+      </tr>
+
+	<tr>
+		<td>(6) Persistent Storage</td>
+		<td>Data</td>
+		<td>Tampering</td>
+		<td>Attacker can tamper vault / key file and corrupt contents.<br>Impact : Malicious data injection or denial of access.</td>
+		<td>Vault content should be authenticated before decryption operation.</td>
+		<td>Use XSalsa20-Poly1308, AEAD encryption algorithm that uses authentication tag to detect tampering and halt process.</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <h2>Assumptions</h2>
+	<p>
+		<strong>1. User : </strong> User manages and keep secret the master_password and maintain timed backup for encrypted_vault and encrypted_key (inside hardware key) for data security.<br>
+		<strong>2. Host OS Integrity : </strong> Host OS is no compromised by a root level keylogger. It can directly read data loaded in memory and cache.<br>
+		<strong>3. Availability : </strong> The vault_file only protects against tampering, and does not prevent from file deletion / corruption from tampering.
+	</p>
+  <h2>Out of Scope</h2>
+	<p>
+		<strong>1. Backup and Data Restoration :</strong> Data backup, restoration, and recovery are outside the scope of the system. The system is not responsible for recovering data that has been accidentally or intentionally deleted, corrupted, or otherwise made unavailable, including as a result of unauthorized access or actions.<br>
+		<strong>2. Direct memory (RAM) access :</strong> Protection of sensitive data while it is resident in system memory (RAM) is not guaranteed against an attacker capable of directly inspecting process memory.<br>
+		<strong>3. Compromised execution environment : </strong> The threat model assumes that the underlying operating system, runtime environment, and execution infrastructure are trusted. Security guarantees do not extend to scenarios in which these components have already been compromised.
+	</p>
+</body>
+</html>
