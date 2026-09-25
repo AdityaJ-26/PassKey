@@ -141,7 +141,7 @@ int FileHandles::storeKeyData(const SecureCharBuffer& enc_key, const CharBuffer&
 
 // reads encrypted master key, nonce and salt from hardware device
 int FileHandles::retrieveKeyData(SecureCharBuffer& enc_key, CharBuffer& salt, CharBuffer& nonce) {
-	if (verifyDirectory(key_path) == false) {
+	if (verifyDirectory(key_path.string()) == false) {
 		return FILE_DO_NOT_EXIST;
 	}
 	
