@@ -12,6 +12,7 @@ target_sources(core_lib
 		src/security.cpp
 		src/user.cpp
 		src/files.cpp
+		src/timer.cpp
 )
 
 target_include_directories(core_lib

@@ -5,6 +5,7 @@
 #include "security.h"
 #include "utils.h"
 #include "data.h"
+#include "timer.h"
 
 /* -------------------------------------------------- */
 // constructor / destructor
@@ -12,7 +13,9 @@
 System::System() :
 	sys_files(new FileHandles()),
 	user(new User()),
-	metadata_list(std::vector<CharBuffer>())
+	metadata_list(std::vector<CharBuffer>()),
+	timer(IDLE_TIMEOUT, [this]() { lock(); }),
+	loggedIn(false)
 {}
 
 System::~System() {
@@ -25,6 +28,12 @@ System::~System() {
 
 const std::string& System::name() const {
 	return user->nameRef();
+}
+
+void System::lock() {
+	loggedIn = false;
+	zero(vault_key);
+	vault_key.clear();
 }
 
 
@@ -149,8 +158,10 @@ void System::createNewUser(const std::string& name, const std::string& hardware_
 
 
 int System::loadUser() {
+	timer.activity();
 	sys_files->initFiles();
 	int status = sys_files->loadUserSettings(user->nameRef());
+	loggedIn = (status == SUCCESS);
 	return status;
 }
 
@@ -159,6 +170,7 @@ int System::loadUser() {
 // user interactions operations
 /* -------------------------------------------------- */
 void System::addEntry(const CharBuffer& metadata, const SecureCharBuffer& username, const SecureCharBuffer& password) {
+	timer.activity();
 	Data* data = new Data(username, password, vault_key);
 	
 	CharBuffer user_nonce, pass_nonce;
@@ -176,6 +188,7 @@ void System::addEntry(const CharBuffer& metadata, const SecureCharBuffer& userna
 
 
 int System::searchEntry(const CharBuffer& metadata, SecureCharBuffer& username, SecureCharBuffer& password) {
+	timer.activity();
 	int index = find(metadata);
 
 	if (index == -1) {
@@ -201,6 +214,7 @@ int System::searchEntry(const CharBuffer& metadata, SecureCharBuffer& username, 
 
 
 void System::displayMetadataList() const {
+	const_cast<IdleTimer&>(timer).activity();
 	for (const auto& meta : metadata_list) {
 		std::cout << "-> " << meta;
 	}

@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "constants.h"
 
-CLI::CLI() : running(true), system(new System()), loggedIn(false)
+CLI::CLI() : running(true), system(new System())
 {}
 
 CLI::~CLI() {
@@ -110,14 +110,14 @@ void CLI::processInput(const std::string& command) {
 					  	  << "Unlocked Vault...\n";
 				std::cout << "Welcome " << system->name() << "\n";
 				system->loadMetadata();
-				loggedIn = true;
+				system->loggedIn = true;
 				break;
 		}
 	}
 
 	// ----- operation commands -----
 	// check for user login for performing user operation commands
-	else if (!loggedIn) {
+	else if (!system->loggedIn) {
 		std::cout << "Error...\n"
 				  << "Login to Continue..\n";
 		return;

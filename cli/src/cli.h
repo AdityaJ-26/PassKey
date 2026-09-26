@@ -6,7 +6,6 @@
 class CLI {
 	private:
 		System* system;
-		bool loggedIn;
 
 	public:
 		bool running;

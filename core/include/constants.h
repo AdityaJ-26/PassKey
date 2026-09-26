@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <chrono>
 #include "alloc.h"
 
 /* -------------------------------------------------- */
@@ -15,6 +16,9 @@ using CharBuffer = std::vector<unsigned char>;
 /* -------------------------------------------------- */
 // numeric constants
 /* -------------------------------------------------- */  
+
+// idle timeout of 5 minutes
+constexpr const std::chrono::milliseconds IDLE_TIMEOUT(300000);
 
 /* 
 * 24 bytes * 2 - nonce size 

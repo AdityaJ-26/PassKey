@@ -3,6 +3,7 @@
 
 #include "files.h"
 #include "user.h"
+#include "timer.h"
 
 class System {
 	private:
@@ -10,10 +11,15 @@ class System {
 		User* user;
 		SecureCharBuffer vault_key;
 		std::vector<CharBuffer> metadata_list;
+		IdleTimer timer;
+	
+	public:
+		bool loggedIn;
 
 	private:
 		int insert(const CharBuffer&);
 		int find(const CharBuffer&) const;
+		void lock();
 
 	public:
 		System();
