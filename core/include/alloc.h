@@ -1,6 +1,7 @@
 /*
 * minimal implementation of a custom allocator for sensitive data
-* uses sodium_allocarray() to allocated secure memory with overwriting and overflow corruption protection, uses sodium_mlock() to lock allocated memory0
+* uses sodium_allocarray() to allocated secure memory with overwriting and overflow corruption protection
+* uses sodium_mlock() to lock allocated memory and prevent paging to disk
 * sodium_allocarray(count) also protect against arithmetic overflow error when count * size > INT_MAX
 */
 
@@ -53,6 +54,11 @@ class SecureAllocator {
 		pointer allocate(size_type numObjects) {
 			pointer ptr = static_cast<pointer>(sodium_allocarray(numObjects, sizeof(T)));
 			if (ptr == nullptr) {
+				throw std::bad_alloc();
+			}
+			// ensure memlock as sodium_allocarray can fail silently
+			if (sodium_mlock(ptr, numObjects*sizeof(T)) != 0) {
+				sodium_free(ptr);
 				throw std::bad_alloc();
 			}
 			return ptr;
