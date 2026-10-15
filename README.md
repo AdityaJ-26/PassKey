@@ -26,31 +26,19 @@ Check the [Threat Model](docs/threat_model.html) (open in html viewer or browser
 [PassKey]
  |
  |-----core                             # software core implementation
- |     |
  |     |-----include
- |     |     |
  |     |     |-----(.h)                 # public headers
- |     | 
  |     |-----src                        # private headers and implementations .cpp files
- |     |     |
  |     |     |-----(.h/.cpp)
- |     |
  |     |-----CMakeLists.txt             # core subdirectory CML
- |
  |-----cli                              # cli implementation, abstracts core
- |     |
  |     |-----src
- |           |
  |           |-----cli.cpp/cli.h
  |
  |-----main.cpp                         # main()
- |
  |-----CMakeLists.txt                   # root CML
- |
  |-----third_party                      # stores third_party libs (libsodium)
- |
  |-----docs
- |     |
  |     |-----architecture.svg
  |     |-----threat_model.html          # html file for threat_model
  |
